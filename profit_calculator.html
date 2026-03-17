@@ -1,0 +1,1815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gray Home Décor — Profit Calculator</title>
+<style>
+  :root {
+    --bg: #f7f4ef;
+    --white: #fff;
+    --ink: #1a1a1a;
+    --muted: #6b6b6b;
+    --border: #ddd8d0;
+    --accent: #2d6a4f;
+    --accent-light: #e8f4f0;
+    --accent2: #b5862a;
+    --danger: #c0392b;
+    --success: #27ae60;
+    --warning: #e67e22;
+    --row-alt: #faf8f5;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', Arial, sans-serif; background: var(--bg); color: var(--ink); font-size: 14px; min-height: 100vh; }
+
+  .header { background: var(--accent); color: white; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .header-title { font-family: 'Playfair Display', Georgia, serif; font-size: 18px; font-weight: 700; }
+  .header-sub { font-size: 11px; opacity: 0.8; margin-top: 2px; }
+
+  .layout { display: grid; grid-template-columns: 400px 1fr; gap: 16px; padding: 16px; max-width: 1200px; margin: 0 auto; }
+
+  .card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+  .card-title { font-family: 'Playfair Display', Georgia, serif; font-size: 14px; color: var(--accent); margin-bottom: 4px; }
+  .card-sub { font-size: 11px; color: var(--muted); margin-bottom: 14px; }
+
+  .section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 14px 0 6px; border-top: 1px solid var(--border); padding-top: 10px; }
+  .field { margin-bottom: 10px; }
+  .field label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 3px; font-weight: 600; }
+  .field input, .field select { width: 100%; padding: 7px 9px; border: 1px solid var(--border); border-radius: 7px; font-size: 13px; background: var(--white); color: var(--ink); font-family: inherit; }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--accent); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .btn-calc { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 11px; font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 6px; font-family: inherit; transition: opacity .15s; }
+  .btn-calc:hover { opacity: .88; }
+  .btn-print { background: var(--accent2); color: white; border: none; border-radius: 8px; padding: 9px; font-size: 13px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 6px; font-family: inherit; }
+
+  /* RESULTS */
+  .result-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .result-header { background: var(--accent); color: white; padding: 14px 20px; }
+  .result-header h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 15px; }
+  .result-meta { font-size: 11px; opacity: .85; margin-top: 3px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border-bottom: 1px solid var(--border); }
+  .summary-cell { padding: 14px 16px; border-right: 1px solid var(--border); text-align: center; }
+  .summary-cell:last-child { border-right: none; }
+  .summary-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 4px; }
+  .summary-value { font-size: 20px; font-weight: 700; font-family: monospace; }
+  .summary-value.green { color: var(--success); }
+  .summary-value.red { color: var(--danger); }
+  .summary-value.amber { color: var(--warning); }
+
+  .margin-bar-wrap { padding: 12px 20px; border-bottom: 1px solid var(--border); }
+  .margin-bar-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 5px; }
+  .margin-bar-bg { background: #f0f0ee; border-radius: 4px; height: 10px; overflow: hidden; }
+  .margin-bar-fill { height: 10px; border-radius: 4px; transition: width .4s ease; }
+
+  .bom-section { padding: 14px 20px; }
+  .bom-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { background: var(--accent); color: white; padding: 6px 9px; text-align: left; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+  th.r, td.r { text-align: right; }
+  td { padding: 7px 9px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  .total-row td { font-weight: 700; background: #e8f4f0; border-top: 2px solid var(--accent); }
+  .profit-row td { font-weight: 700; background: var(--accent); color: white; font-size: 13px; }
+
+  .verdict { padding: 12px 20px; }
+  .verdict-box { border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 600; }
+  .verdict-box.good { background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; }
+  .verdict-box.warn { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+  .verdict-box.bad { background: #ffebee; color: #b71c1c; border: 1px solid #ef9a9a; }
+
+  .rates-section { margin-top: 12px; padding: 12px; background: var(--row-alt); border-radius: 8px; border: 1px solid var(--border); }
+  .rates-title { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .rates-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; font-size: 11px; }
+  .rate-row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid var(--border); }
+  .rate-row:last-child { border-bottom: none; }
+  .rate-label { color: var(--muted); }
+  .rate-val { font-weight: 600; font-family: monospace; }
+
+  .placeholder { display: flex; align-items: center; justify-content: center; height: 300px; color: var(--muted); font-size: 14px; flex-direction: column; gap: 8px; }
+  .placeholder-icon { font-size: 40px; opacity: .3; }
+
+  @media print {
+    .sidebar { display: none !important; }
+    .layout { grid-template-columns: 1fr; }
+    .header { background: #2d6a4f !important; }
+    .result-header { background: #2d6a4f !important; }
+    th { background: #2d6a4f !important; }
+    .profit-row td { background: #2d6a4f !important; }
+  }
+
+  /* PRICING PANEL */
+  .pricing-panel { display: none; position: fixed; top: 0; right: 0; width: 480px; height: 100vh; background: var(--white); border-left: 2px solid var(--accent); z-index: 1000; flex-direction: column; box-shadow: -4px 0 24px rgba(0,0,0,.12); }
+  .pricing-panel.open { display: flex; }
+  .pricing-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--accent); color: white; flex-shrink: 0; }
+  .pricing-header h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 15px; }
+  .btn-close-p { background: rgba(255,255,255,.2); border: none; color: white; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 13px; font-weight: 700; font-family: inherit; }
+  .pricing-scroll { flex: 1; overflow-y: auto; padding: 16px 20px; }
+  .pricing-group { margin-bottom: 16px; }
+  .pricing-group-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+  .pr-row { display: grid; grid-template-columns: 1fr 120px 100px; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .pr-row span { font-size: 12px; color: var(--ink); }
+  .pr-row small { font-size: 10px; color: var(--muted); display: block; }
+  .pr-row input { padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; text-align: right; font-family: inherit; width: 100%; }
+  .pr-row input:focus { outline: none; border-color: var(--accent); }
+  .pr-row .php-preview { font-size: 12px; font-weight: 700; color: var(--accent); text-align: right; font-family: monospace; }
+  .rmb-row { background: var(--accent-light); border: 1px solid var(--accent); border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .rmb-row label { font-size: 12px; font-weight: 700; color: var(--accent); }
+  .rmb-row input { width: 100px; padding: 6px 8px; border: 1px solid var(--accent); border-radius: 6px; font-size: 14px; font-weight: 700; text-align: center; font-family: inherit; }
+  .pricing-footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-shrink: 0; }
+  .btn-save-p { background: var(--accent); color: white; border: none; border-radius: 7px; padding: 10px 16px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; flex: 1; }
+  .btn-reset-p { background: none; border: 1px solid var(--border); border-radius: 7px; padding: 10px 14px; font-size: 12px; cursor: pointer; font-family: inherit; color: var(--muted); }
+  .note-box { background: #fff3e0; border: 1px solid #ffcc80; border-radius: 8px; padding: 10px 12px; font-size: 11px; color: #e65100; margin-bottom: 14px; line-height: 1.5; }
+
+
+  /* ── REDESIGNED PRICING PANEL ── */
+  .pricing-panel { display:none;position:fixed;top:0;right:0;width:520px;height:100vh;background:var(--white);border-left:2px solid var(--accent);z-index:1000;flex-direction:column;box-shadow:-4px 0 24px rgba(0,0,0,.12); }
+  .pricing-panel.open { display:flex; }
+  .pricing-header { padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--accent);color:white;flex-shrink:0; }
+  .pricing-header h3 { font-family:'Playfair Display',Georgia,serif;font-size:15px; }
+  .btn-close-p { background:rgba(255,255,255,.2);border:none;color:white;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit; }
+  .pricing-scroll { flex:1;overflow-y:auto;padding:14px 16px; }
+  .pricing-group { margin-bottom:16px; }
+  .pricing-group-title { font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border); }
+  /* Clean 4-column row */
+  .pr-table-head { display:grid;grid-template-columns:1fr 90px 80px 80px;gap:6px;font-size:9px;font-weight:700;text-transform:uppercase;color:var(--muted);margin-bottom:4px;padding:0 4px; }
+  .pr-item { display:grid;grid-template-columns:1fr 90px 80px 80px;gap:6px;align-items:center;margin-bottom:6px;background:var(--row-alt);border-radius:6px;padding:6px 4px; }
+  .pr-item span:first-child { font-size:12px;color:var(--ink);line-height:1.3; }
+  .pr-item input { padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;text-align:right;font-family:inherit;width:100%;background:white; }
+  .pr-item input:focus { outline:none;border-color:var(--accent); }
+  .pr-val { font-size:12px;font-weight:700;color:var(--accent);text-align:right;font-family:monospace; }
+  .pr-qty { font-size:12px;color:var(--muted);text-align:center;font-weight:600; }
+  .pricing-footer { padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0; }
+  .btn-save-p { background:var(--accent);color:white;border:none;border-radius:7px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;flex:1; }
+  .btn-reset-p { background:none;border:1px solid var(--border);border-radius:7px;padding:10px 14px;font-size:12px;cursor:pointer;font-family:inherit;color:var(--muted); }
+  .rmb-row { background:var(--accent-light);border:1px solid var(--accent);border-radius:8px;padding:10px 12px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px; }
+  .rmb-row label { font-size:13px;font-weight:700;color:var(--accent); }
+  .rmb-row input { width:100px;padding:7px 10px;border:1px solid var(--accent);border-radius:6px;font-size:14px;font-weight:700;text-align:center;font-family:inherit; }
+  .note-box { background:#fff3e0;border:1px solid #ffcc80;border-radius:8px;padding:10px 12px;font-size:11px;color:#e65100;margin-bottom:14px;line-height:1.5; }
+  .modal-overlay { display:none; }
+
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">Gray Home Décor — Profit Calculator</div>
+    <div class="header-sub">Honeycomb · Pleated Screen · Combo · Based on actual supplier costs</div>
+  </div>
+  <div style="font-size:11px;opacity:.7">RMB rate: ₱8.80 &nbsp;|&nbsp; Updated: Mar 2026</div>
+</div>
+
+<div class="tab-bar-main" style="background:#fff;border-bottom:2px solid #2d6a4f;display:flex;padding:0 16px">
+  <button class="main-tab active" id="tab_hc" onclick="switchMainTab('hc')" style="padding:10px 20px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:700;color:#2d6a4f;border-bottom:3px solid #2d6a4f;margin-bottom:-2px;font-family:inherit">🪟 Honeycomb / Pleated / Combo</button>
+  <button class="main-tab" id="tab_sec" onclick="switchMainTab('sec')" style="padding:10px 20px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:#6b6b6b;border-bottom:3px solid transparent;margin-bottom:-2px;font-family:inherit">🔒 Security Screen</button>
+  <button class="main-tab" id="tab_poly" onclick="switchMainTab('poly')" style="padding:10px 20px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:#6b6b6b;border-bottom:3px solid transparent;margin-bottom:-2px;font-family:inherit">🚪 Polycarbonate Door</button>
+  <button class="main-tab" id="tab_ttb" onclick="switchMainTab('ttb')" style="padding:10px 20px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:#6b6b6b;border-bottom:3px solid transparent;margin-bottom:-2px;font-family:inherit">↕️ Top to Bottom Screen</button>
+</div>
+
+<div id="pane_hc" class="tab-pane-main">
+<div class="layout">
+
+
+  <!-- SIDEBAR INPUT -->
+  <div class="sidebar">
+    <div class="card">
+      <div class="card-title">🧮 Job Calculator</div>
+      <div class="card-sub">Enter window dimensions to compute profit</div>
+
+      <div class="field">
+        <label>Product Type</label>
+        <select id="mode" onchange="onModeChange()">
+          <option value="hc1">Honeycomb Only — One Way</option>
+          <option value="hc2">Honeycomb Only — Two Way</option>
+          <option value="combo">Honeycomb + Screen (Combo)</option>
+          <option value="pleated1">Pleated Screen — One Way</option>
+          <option value="pleated2">Pleated Screen — Two Way</option>
+        </select>
+      </div>
+
+      <div class="section-label">Window Dimensions</div>
+      <div class="grid2">
+        <div class="field">
+          <label>Width (mm)</label>
+          <input type="number" id="wmm" oninput="calculate()" placeholder="e.g. 1595" value="1595">
+        </div>
+        <div class="field">
+          <label>Height (mm)</label>
+          <input type="number" id="hmm" oninput="calculate()" placeholder="e.g. 2110" value="2110">
+        </div>
+      </div>
+
+      <div class="section-label">Labor & Other Costs</div>
+      <div class="field">
+        <label>Manpower daily rate (₱)</label>
+        <input type="number" id="labor_rate" oninput="calculate()" value="700">
+      </div>
+      <div class="field">
+        <label>Windows installed per day (this type)</label>
+        <input type="number" id="windows_per_day" oninput="calculate()" value="3" min="1" max="10">
+      </div>
+      <div class="field">
+        <label>Delivery / transport (₱, optional)</label>
+        <input type="number" id="delivery" oninput="calculate()" value="0" placeholder="0">
+      </div>
+      <div class="field">
+        <label>Other costs (₱, optional)</label>
+        <input type="number" id="other" oninput="calculate()" value="0" placeholder="Powdercoat, etc.">
+      </div>
+
+      <div class="section-label">Selling Price Override</div>
+      <div class="field">
+        <label>Selling rate per sqft (₱) <span id="default_rate_hint" style="color:var(--accent);font-weight:700"></span></label>
+        <input type="number" id="sell_rate" oninput="calculate()" value="390">
+      </div>
+      <div class="field">
+        <label>Minimum sqft</label>
+        <input type="number" id="min_sqft" oninput="calculate()" value="20">
+      </div>
+
+      <button class="btn-calc" onclick="calculate()">⚡ Calculate Profit</button>
+      <button class="btn-print" onclick="window.print()">🖨️ Print / Save PDF</button>
+
+      <button class="btn-settings" onclick="openPricing()" style="background:none;border:1px solid var(--border);border-radius:7px;padding:7px 10px;font-size:11px;font-weight:600;cursor:pointer;color:var(--muted);font-family:inherit;width:100%;margin-top:8px;text-align:left">⚙️ Edit Material Prices</button>
+
+      <div id="rates-display" class="rates-section">
+        <div class="rates-title">Material Rates Currently Used (PHP)</div>
+        <div class="rates-grid">
+          <div>
+            <div class="rate-row"><span class="rate-label">X023/m</span><span class="rate-val" id="disp_x023">₱129.60</span></div>
+            <div class="rate-row"><span class="rate-label">X022/m</span><span class="rate-val" id="disp_x022">₱171.16</span></div>
+            <div class="rate-row"><span class="rate-label">X024/m</span><span class="rate-val" id="disp_x024">₱108.94</span></div>
+            <div class="rate-row"><span class="rate-label">X025/m</span><span class="rate-val" id="disp_x025">₱168.40</span></div>
+          </div>
+          <div>
+            <div class="rate-row"><span class="rate-label">HC fabric/sqft</span><span class="rate-val" id="disp_hc">₱12.67</span></div>
+            <div class="rate-row"><span class="rate-label">Screen/sqft</span><span class="rate-val" id="disp_sc">₱2.04</span></div>
+            <div class="rate-row"><span class="rate-label">PVC/m</span><span class="rate-val" id="disp_pvc">₱45.27</span></div>
+            <div class="rate-row"><span class="rate-label">Rope/m</span><span class="rate-val" id="disp_rope">₱1.65</span></div>
+            <div class="rate-row"><span class="rate-label">Tape/m</span><span class="rate-val" id="disp_tape">₱7.04</span></div>
+            <div class="rate-row"><span class="rate-label">Accessories/set</span><span class="rate-val" id="disp_accs">₱325.16</span></div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:6px">RMB rate: <span id="disp_rmb">8.80</span> | Click ⚙️ to update</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS PANEL -->
+  <div id="results">
+    <div class="placeholder">
+      <div class="placeholder-icon">🪟</div>
+      <div>Enter dimensions and click <strong>Calculate Profit</strong></div>
+      <div style="font-size:12px;color:var(--muted)">Results will appear here</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── MATERIAL RATES (PHP) ──
+const R = {
+  x023_m:  129.6028,
+  x022_m:  171.1600,
+  x024_m:  108.9379,
+  x025_m:  168.3986,
+  pvc_m:    45.2711,
+  tape_m:    7.0400,
+  rope_m:    1.6500,
+  hc_sqft:  12.6719,
+  sc_sqft:   2.0438,
+  accs:    325.1600,
+};
+
+const DEFAULT_RATES = {
+  hc1: 390, hc2: 390, combo: 410, pleated1: 350, pleated2: 375
+};
+const MIN_SQFT = { hc1: 20, hc2: 20, combo: 20, pleated1: 15, pleated2: 15 };
+
+function onModeChange() {
+  const mode = document.getElementById('mode').value;
+  document.getElementById('sell_rate').value = DEFAULT_RATES[mode];
+  document.getElementById('min_sqft').value = MIN_SQFT[mode];
+  document.getElementById('default_rate_hint').textContent = '(default: ₱' + DEFAULT_RATES[mode] + '/sqft)';
+  const wpd = { hc1: 3, hc2: 2, combo: 2, pleated1: 4, pleated2: 3 };
+  document.getElementById('windows_per_day').value = wpd[mode] || 3;
+  // Auto-recalculate when mode changes
+  if (document.getElementById('wmm').value && document.getElementById('hmm').value) {
+    calculate();
+  }
+}
+
+onModeChange();
+
+function sqftFromMM(wmm, hmm) {
+  return (wmm / 304.8) * (hmm / 304.8);
+}
+
+function calculate() {
+  const mode = document.getElementById('mode').value;
+  const w = parseFloat(document.getElementById('wmm').value) || 0;
+  const h = parseFloat(document.getElementById('hmm').value) || 0;
+  const laborRate = parseFloat(document.getElementById('labor_rate').value) || 700;
+  const wpd = parseFloat(document.getElementById('windows_per_day').value) || 3;
+  const delivery = parseFloat(document.getElementById('delivery').value) || 0;
+  const other = parseFloat(document.getElementById('other').value) || 0;
+  const sellRate = parseFloat(document.getElementById('sell_rate').value) || 390;
+  const minSqft = parseFloat(document.getElementById('min_sqft').value) || 20;
+
+  if (!w || !h) { alert('Please enter width and height.'); return; }
+
+  const wm = w / 1000;
+  const hm = h / 1000;
+  const rawSqft = sqftFromMM(w, h);
+  const billSqft = Math.max(rawSqft, minSqft);
+
+  // ── CUTTINGS (from Honeycomb.html logic) ──
+  const meshDed = 40;
+  const hcDed = 35;
+
+  // Aluminum lengths (meters)
+  const len_side_frame    = (h - 51) / 1000;   // X023 x2
+  const len_top_profile   = (w - 51) / 1000;   // X022 x1
+  const len_bottom_profile= (w - 51) / 1000;   // X023 x1
+  const len_inner_frame   = (h - meshDed) / 1000; // X024 x2
+  const len_middle_profile= (h - 100) / 1000;  // X025 x1 (one-way) or x2 (two-way)
+  const len_pvc           = (h - meshDed) / 1000; // PVC
+
+  const middle_qty = (mode === 'hc2' || mode === 'pleated2') ? 2 : 1;
+  const pvc_qty    = (mode === 'hc2' || mode === 'combo' || mode === 'pleated2') ? 4 : 2; // 2x per way
+  const tape_qty   = pvc_qty; // same as PVC
+
+  // Rope: based on hold distances (approx height * 2 ropes * 2 pcs per size * num_sizes)
+  // From screenshot: 8 hold sequences, 4 rope sizes x2 pcs = 8 ropes
+  // Rough: rope total ≈ (h * 0.002 + h * 0.004 + h * 0.006 + h * 0.008) * 2 ... 
+  // Simpler: use honeycomb height for rope estimate: ~4 ropes, each ~hc_height in length + extra
+  const hc_height = (h - hcDed) / 1000;
+  const rope_sizes_count = h <= 1000 ? 4 : h <= 2000 ? 6 : h <= 2500 ? 8 : 10;
+  const rope_total_m = (rope_sizes_count / 2) * hc_height * 2; // pairs x height x 2pcs
+
+  // ── MATERIAL COSTS ──
+  const c_x023  = (2 * len_side_frame + len_bottom_profile) * R.x023_m;
+  const c_x022  = len_top_profile * R.x022_m;
+  const c_x024  = 2 * len_inner_frame * R.x024_m;
+  const c_x025  = middle_qty * len_middle_profile * R.x025_m;
+  const c_pvc   = pvc_qty * len_pvc * R.pvc_m;
+  const c_tape  = tape_qty * len_pvc * R.tape_m;
+  const c_rope  = rope_total_m * R.rope_m;
+  const c_accs  = R.accs;
+
+  // Fabric costs depend on mode
+  let c_hc_fabric = 0, c_sc_fabric = 0;
+  const hc_sqft = billSqft;
+  if (mode === 'hc1')     { c_hc_fabric = hc_sqft * R.hc_sqft; }
+  if (mode === 'hc2')     { c_hc_fabric = hc_sqft * R.hc_sqft * 2; }  // both sides
+  if (mode === 'combo')   { c_hc_fabric = hc_sqft * R.hc_sqft; c_sc_fabric = hc_sqft * R.sc_sqft; }
+  if (mode === 'pleated1'){ c_sc_fabric = hc_sqft * R.sc_sqft; }
+  if (mode === 'pleated2'){ c_sc_fabric = hc_sqft * R.sc_sqft * 2; }
+
+  const totalMaterial = c_x023 + c_x022 + c_x024 + c_x025 + c_pvc + c_tape + c_rope + c_accs + c_hc_fabric + c_sc_fabric;
+  const laborCost = laborRate / wpd;
+  const totalCost = totalMaterial + laborCost + delivery + other;
+  const sellingPrice = billSqft * sellRate;
+  const profit = sellingPrice - totalCost;
+  const margin = (profit / sellingPrice) * 100;
+
+  const modeNames = {
+    hc1: 'Honeycomb Only — One Way',
+    hc2: 'Honeycomb Only — Two Way',
+    combo: 'Honeycomb + Screen (Combo)',
+    pleated1: 'Pleated Screen — One Way',
+    pleated2: 'Pleated Screen — Two Way',
+  };
+
+  const fmt = v => '₱' + v.toLocaleString('en-PH', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const marginColor = margin >= 70 ? '#27ae60' : margin >= 50 ? '#e67e22' : '#c0392b';
+  const barColor = margin >= 70 ? '#27ae60' : margin >= 50 ? '#e67e22' : '#c0392b';
+
+  const verdict = margin >= 70
+    ? { cls: 'good', msg: `✅ Excellent margin! You're earning ${margin.toFixed(1)}% on this project. Very profitable.` }
+    : margin >= 50
+    ? { cls: 'warn', msg: `⚠️ Acceptable margin at ${margin.toFixed(1)}%. Consider reviewing pricing or reducing costs.` }
+    : { cls: 'bad', msg: `🛑 Low margin at ${margin.toFixed(1)}%. This project may not be worth taking unless you can increase the selling price.` };
+
+  // BOM rows
+  const bom = [
+    ['X023 Outer frame (side ×2 + bottom ×1)', `${(2*len_side_frame+len_bottom_profile).toFixed(3)}m × ₱129.60/m`, c_x023],
+    ['X022 Top profile (×1)', `${len_top_profile.toFixed(3)}m × ₱171.16/m`, c_x022],
+    ['X024 Inner frame (×2)', `${(2*len_inner_frame).toFixed(3)}m × ₱108.94/m`, c_x024],
+    [`X025 Middle profile (×${middle_qty})`, `${(middle_qty*len_middle_profile).toFixed(3)}m × ₱168.40/m`, c_x025],
+    [`PVC strip (×${pvc_qty})`, `${(pvc_qty*len_pvc).toFixed(3)}m × ₱45.27/m`, c_pvc],
+    [`Double sided tape (×${tape_qty})`, `${(tape_qty*len_pvc).toFixed(3)}m × ₱7.04/m`, c_tape],
+    ['Rope/string', `${rope_total_m.toFixed(2)}m × ₱1.65/m`, c_rope],
+    ['Plastic accessories set', '1 set', c_accs],
+  ];
+  if (c_hc_fabric > 0) bom.push([
+    mode === 'hc2' ? 'Honeycomb fabric (×2 two-way)' : 'Honeycomb fabric',
+    `${(mode==='hc2'?hc_sqft*2:hc_sqft).toFixed(2)} sqft × ₱12.67`,
+    c_hc_fabric
+  ]);
+  if (c_sc_fabric > 0) bom.push([
+    mode === 'pleated2' ? 'Pleated screen fabric (×2)' : 'Pleated screen fabric',
+    `${(mode==='pleated2'?hc_sqft*2:hc_sqft).toFixed(2)} sqft × ₱2.04`,
+    c_sc_fabric
+  ]);
+
+  const bomRows = bom.map(([name, detail, cost]) => `
+    <tr>
+      <td>${name}</td>
+      <td style="color:var(--muted)">${detail}</td>
+      <td class="r">${fmt(cost)}</td>
+      <td class="r" style="color:var(--muted)">${((cost/totalCost)*100).toFixed(1)}%</td>
+    </tr>`).join('');
+
+  document.getElementById('results').innerHTML = `
+    <div class="result-card">
+      <div class="result-header">
+        <h2>${modeNames[mode]}</h2>
+        <div class="result-meta">
+          ${w}mm × ${h}mm &nbsp;|&nbsp;
+          ${rawSqft.toFixed(2)} sqft (billed: ${billSqft.toFixed(2)} sqft) &nbsp;|&nbsp;
+          Selling: ₱${sellRate}/sqft
+        </div>
+      </div>
+
+      <div class="summary-grid">
+        <div class="summary-cell">
+          <div class="summary-label">Selling Price</div>
+          <div class="summary-value">${fmt(sellingPrice)}</div>
+        </div>
+        <div class="summary-cell">
+          <div class="summary-label">Total Cost</div>
+          <div class="summary-value amber">${fmt(totalCost)}</div>
+        </div>
+        <div class="summary-cell">
+          <div class="summary-label">Gross Profit</div>
+          <div class="summary-value ${profit >= 0 ? 'green' : 'red'}">${fmt(profit)}</div>
+        </div>
+        <div class="summary-cell">
+          <div class="summary-label">Gross Margin</div>
+          <div class="summary-value" style="color:${marginColor}">${margin.toFixed(1)}%</div>
+        </div>
+      </div>
+
+      <div class="margin-bar-wrap">
+        <div class="margin-bar-label">
+          <span>Cost: ${fmt(totalCost)} (${(100-margin).toFixed(1)}%)</span>
+          <span>Profit: ${fmt(profit)} (${margin.toFixed(1)}%)</span>
+        </div>
+        <div class="margin-bar-bg">
+          <div class="margin-bar-fill" style="width:${Math.max(0,Math.min(100,margin))}%;background:${barColor}"></div>
+        </div>
+      </div>
+
+      <div class="bom-section">
+        <div class="bom-title">Bill of Materials & Cost Breakdown</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Detail</th>
+              <th class="r">Cost (₱)</th>
+              <th class="r">% of total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${bomRows}
+            <tr class="total-row">
+              <td colspan="2">Total Materials</td>
+              <td class="r">${fmt(totalMaterial)}</td>
+              <td class="r">${((totalMaterial/totalCost)*100).toFixed(1)}%</td>
+            </tr>
+            <tr>
+              <td>Labor (₱${laborRate}/day ÷ ${wpd} windows)</td>
+              <td style="color:var(--muted)">1 manpower</td>
+              <td class="r">${fmt(laborCost)}</td>
+              <td class="r">${((laborCost/totalCost)*100).toFixed(1)}%</td>
+            </tr>
+            ${delivery > 0 ? `<tr><td>Delivery / transport</td><td></td><td class="r">${fmt(delivery)}</td><td class="r">${((delivery/totalCost)*100).toFixed(1)}%</td></tr>` : ''}
+            ${other > 0 ? `<tr><td>Other costs</td><td></td><td class="r">${fmt(other)}</td><td class="r">${((other/totalCost)*100).toFixed(1)}%</td></tr>` : ''}
+            <tr class="total-row">
+              <td colspan="2"><strong>TOTAL COST</strong></td>
+              <td class="r"><strong>${fmt(totalCost)}</strong></td>
+              <td class="r">100%</td>
+            </tr>
+            <tr class="profit-row">
+              <td colspan="2">GROSS PROFIT</td>
+              <td class="r">${fmt(profit)}</td>
+              <td class="r">${margin.toFixed(1)}%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="verdict">
+        <div class="verdict-box ${verdict.cls}">${verdict.msg}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px;padding:0 2px">
+          ⚠️ Not included: China shipping allocation, overhead (rent, electricity), tools/equipment depreciation.
+          These typically add ₱200–500 per window depending on order size.
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+
+// ── DEFAULT RATES (originals for reset) ──
+const DEFAULTS = {
+  rmb: 8.80,
+  x023_rmb: 85.42, x023_len: 5.8,
+  x022_rmb: 112.81, x022_len: 5.8,
+  x024_rmb: 71.80, x024_len: 5.8,
+  x025_rmb: 110.99, x025_len: 5.8,
+  hc_rmb: 883.50, hc_sqm: 57,
+  sc_rmb: 225.00, sc_sqm: 90,
+  pvc_rmb: 23.15, pvc_len: 4.5,
+  tape_rmb: 40.00, tape_len: 50,
+  rope_rmb: 300.00, rope_len: 1600,
+  accs_rmb: 36.95,
+};
+
+function getRMB() { return parseFloat(document.getElementById('p_rmb').value) || 8.80; }
+
+function updatePreviews() {
+  const rmb = getRMB();
+  const calc = (rmbVal, length, isSqm) => {
+    const phpPer = isSqm
+      ? (rmbVal * rmb) / (length * 10.764)  // sqm to sqft
+      : (rmbVal * rmb) / length;
+    return '₱' + phpPer.toFixed(4);
+  };
+  document.getElementById('prev_x023').textContent = calc(+document.getElementById('p_x023_rmb').value, +document.getElementById('p_x023_len').value);
+  document.getElementById('prev_x022').textContent = calc(+document.getElementById('p_x022_rmb').value, +document.getElementById('p_x022_len').value);
+  document.getElementById('prev_x024').textContent = calc(+document.getElementById('p_x024_rmb').value, +document.getElementById('p_x024_len').value);
+  document.getElementById('prev_x025').textContent = calc(+document.getElementById('p_x025_rmb').value, +document.getElementById('p_x025_len').value);
+  document.getElementById('prev_hc').textContent  = calc(+document.getElementById('p_hc_rmb').value,  +document.getElementById('p_hc_sqm').value,  true);
+  document.getElementById('prev_sc').textContent  = calc(+document.getElementById('p_sc_rmb').value,  +document.getElementById('p_sc_sqm').value,  true);
+  document.getElementById('prev_pvc').textContent = calc(+document.getElementById('p_pvc_rmb').value, +document.getElementById('p_pvc_len').value);
+  document.getElementById('prev_tape').textContent= calc(+document.getElementById('p_tape_rmb').value,+document.getElementById('p_tape_len').value);
+  document.getElementById('prev_rope').textContent= calc(+document.getElementById('p_rope_rmb').value,+document.getElementById('p_rope_len').value);
+  const accsRmb = +document.getElementById('p_accs_rmb').value;
+  document.getElementById('prev_accs').textContent = '₱' + (accsRmb * rmb).toFixed(2);
+}
+
+function savePricing() {
+  const rmb = getRMB();
+  const perM = (rmbVal, len) => (rmbVal * rmb) / len;
+  const perSqft = (rmbVal, sqm) => (rmbVal * rmb) / (sqm * 10.764);
+
+  R.x023_m  = perM(+document.getElementById('p_x023_rmb').value, +document.getElementById('p_x023_len').value);
+  R.x022_m  = perM(+document.getElementById('p_x022_rmb').value, +document.getElementById('p_x022_len').value);
+  R.x024_m  = perM(+document.getElementById('p_x024_rmb').value, +document.getElementById('p_x024_len').value);
+  R.x025_m  = perM(+document.getElementById('p_x025_rmb').value, +document.getElementById('p_x025_len').value);
+  R.hc_sqft = perSqft(+document.getElementById('p_hc_rmb').value, +document.getElementById('p_hc_sqm').value);
+  R.sc_sqft = perSqft(+document.getElementById('p_sc_rmb').value, +document.getElementById('p_sc_sqm').value);
+  R.pvc_m   = perM(+document.getElementById('p_pvc_rmb').value, +document.getElementById('p_pvc_len').value);
+  R.tape_m  = perM(+document.getElementById('p_tape_rmb').value, +document.getElementById('p_tape_len').value);
+  R.rope_m  = perM(+document.getElementById('p_rope_rmb').value, +document.getElementById('p_rope_len').value);
+  R.accs    = +document.getElementById('p_accs_rmb').value * rmb;
+
+  // Update display panel
+  document.getElementById('disp_x023').textContent = '₱' + R.x023_m.toFixed(2);
+  document.getElementById('disp_x022').textContent = '₱' + R.x022_m.toFixed(2);
+  document.getElementById('disp_x024').textContent = '₱' + R.x024_m.toFixed(2);
+  document.getElementById('disp_x025').textContent = '₱' + R.x025_m.toFixed(2);
+  document.getElementById('disp_hc').textContent   = '₱' + R.hc_sqft.toFixed(2);
+  document.getElementById('disp_sc').textContent   = '₱' + R.sc_sqft.toFixed(2);
+  document.getElementById('disp_pvc').textContent  = '₱' + R.pvc_m.toFixed(2);
+  document.getElementById('disp_tape').textContent = '₱' + R.tape_m.toFixed(2);
+  document.getElementById('disp_rope').textContent = '₱' + R.rope_m.toFixed(2);
+  document.getElementById('disp_accs').textContent = '₱' + R.accs.toFixed(2);
+  document.getElementById('disp_rmb').textContent  = rmb.toFixed(2);
+
+  closePricing();
+  calculate();
+  // Show subtle saved message
+  const btn = document.querySelector('.btn-save-p');
+  const orig = btn.textContent;
+  btn.textContent = '✅ Saved!';
+  btn.style.background = '#27ae60';
+  setTimeout(() => { btn.textContent = orig; btn.style.background = ''; }, 1500);
+}
+
+function resetPricing() {
+  // Reset confirmed inline
+  document.getElementById('p_rmb').value       = DEFAULTS.rmb;
+  document.getElementById('p_x023_rmb').value  = DEFAULTS.x023_rmb;
+  document.getElementById('p_x023_len').value  = DEFAULTS.x023_len;
+  document.getElementById('p_x022_rmb').value  = DEFAULTS.x022_rmb;
+  document.getElementById('p_x022_len').value  = DEFAULTS.x022_len;
+  document.getElementById('p_x024_rmb').value  = DEFAULTS.x024_rmb;
+  document.getElementById('p_x024_len').value  = DEFAULTS.x024_len;
+  document.getElementById('p_x025_rmb').value  = DEFAULTS.x025_rmb;
+  document.getElementById('p_x025_len').value  = DEFAULTS.x025_len;
+  document.getElementById('p_hc_rmb').value    = DEFAULTS.hc_rmb;
+  document.getElementById('p_hc_sqm').value    = DEFAULTS.hc_sqm;
+  document.getElementById('p_sc_rmb').value    = DEFAULTS.sc_rmb;
+  document.getElementById('p_sc_sqm').value    = DEFAULTS.sc_sqm;
+  document.getElementById('p_pvc_rmb').value   = DEFAULTS.pvc_rmb;
+  document.getElementById('p_pvc_len').value   = DEFAULTS.pvc_len;
+  document.getElementById('p_tape_rmb').value  = DEFAULTS.tape_rmb;
+  document.getElementById('p_tape_len').value  = DEFAULTS.tape_len;
+  document.getElementById('p_rope_rmb').value  = DEFAULTS.rope_rmb;
+  document.getElementById('p_rope_len').value  = DEFAULTS.rope_len;
+  document.getElementById('p_accs_rmb').value  = DEFAULTS.accs_rmb;
+  updatePreviews();
+  savePricing();
+}
+
+function openPricing()  { document.getElementById('pricingPanel').classList.add('open'); updatePreviews(); }
+function closePricing() { document.getElementById('pricingPanel').classList.remove('open'); }
+
+
+// ── SECURITY SCREEN ──────────────────────────────────────────────
+
+function switchPTab(tab) {
+  ['hc','sec','poly','ttb'].forEach(function(t) {
+    var sec = document.getElementById('psec_'+t);
+    var btn = document.getElementById('ptab_'+t);
+    if (sec) sec.style.display = t===tab ? '' : 'none';
+    if (btn) {
+      btn.style.background = t===tab ? 'rgba(255,255,255,.15)' : 'none';
+      btn.style.color = t===tab ? 'white' : 'rgba(255,255,255,.6)';
+      btn.style.borderBottomColor = t===tab ? 'white' : 'transparent';
+      btn.style.fontWeight = t===tab ? '700' : '600';
+    }
+  });
+  // Sync TTB RMB display
+  var rmbEl = document.getElementById('ttb_rmb_display2');
+  if (rmbEl) rmbEl.textContent = (parseFloat(document.getElementById('p_rmb').value)||8.8).toFixed(2);
+}
+
+function switchMainTab(tab) {
+  ['hc','sec','poly','ttb'].forEach(function(t) {
+    var pane = document.getElementById('pane_'+t);
+    var btn  = document.getElementById('tab_'+t);
+    if (pane) pane.style.display = t === tab ? '' : 'none';
+    if (btn) {
+      btn.style.color = t === tab ? '#2d6a4f' : '#6b6b6b';
+      btn.style.borderBottomColor = t === tab ? '#2d6a4f' : 'transparent';
+      btn.style.fontWeight = t === tab ? '700' : '600';
+    }
+  });
+  if (tab === 'sec')  calcSec();
+  if (tab === 'poly') calcPoly();
+  if (tab === 'ttb')  calcTTB();
+}
+
+// Adjuster map for security screen
+var ADJUSTER_MAP = [
+  {gap:0,wl1019:1,wl1316:0,wl0816:0,wl1417:0},{gap:1,wl1019:1,wl1316:0,wl0816:0,wl1417:0},
+  {gap:2,wl1019:1,wl1316:0,wl0816:0,wl1417:0},{gap:3,wl1019:0,wl1316:0,wl0816:0,wl1417:1,achieved:3},
+  {gap:4,wl1019:1,wl1316:0,wl0816:1,wl1417:0},{gap:5,wl1019:1,wl1316:0,wl0816:1,wl1417:0},
+  {gap:6,wl1019:1,wl1316:0,wl0816:1,wl1417:0},{gap:7,wl1019:1,wl1316:0,wl0816:1,wl1417:0},
+  {gap:8,wl1019:0,wl1316:0,wl0816:1,wl1417:1},{gap:9,wl1019:1,wl1316:1,wl0816:0,wl1417:0},
+  {gap:10,wl1019:1,wl1316:1,wl0816:0,wl1417:0},{gap:11,wl1019:1,wl1316:1,wl0816:0,wl1417:0},
+  {gap:12,wl1019:1,wl1316:1,wl0816:0,wl1417:0},{gap:13,wl1019:0,wl1316:1,wl0816:0,wl1417:1},
+  {gap:14,wl1019:1,wl1316:1,wl0816:1,wl1417:0},{gap:15,wl1019:1,wl1316:1,wl0816:1,wl1417:0},
+  {gap:16,wl1019:1,wl1316:1,wl0816:1,wl1417:0},{gap:17,wl1019:1,wl1316:1,wl0816:1,wl1417:0},
+  {gap:18,wl1019:0,wl1316:1,wl0816:1,wl1417:1},{gap:19,wl1019:1,wl1316:2,wl0816:0,wl1417:0},
+  {gap:20,wl1019:1,wl1316:2,wl0816:0,wl1417:0},{gap:25,wl1019:1,wl1316:2,wl0816:1,wl1417:0},
+  {gap:30,wl1019:1,wl1316:3,wl0816:0,wl1417:0},{gap:35,wl1019:1,wl1316:3,wl0816:1,wl1417:0},
+  {gap:40,wl1019:1,wl1316:4,wl0816:0,wl1417:0},{gap:45,wl1019:1,wl1316:4,wl0816:1,wl1417:0},
+  {gap:50,wl1019:1,wl1316:5,wl0816:0,wl1417:0}
+];
+
+function getAdj(gap) {
+  gap = Math.max(0, Math.min(50, Math.round(gap)));
+  var found = ADJUSTER_MAP.find(function(a){ return a.gap === gap; });
+  if (!found) {
+    // find closest
+    found = ADJUSTER_MAP.reduce(function(prev, curr) {
+      return Math.abs(curr.gap - gap) < Math.abs(prev.gap - gap) ? curr : prev;
+    });
+  }
+  return found;
+}
+
+function calcSec() {
+  var w = parseFloat(document.getElementById('sec_w').value) || 0;
+  var h = parseFloat(document.getElementById('sec_h').value) || 0;
+  var mode = document.getElementById('sec_mode').value;
+  var laborRate = parseFloat(document.getElementById('sec_labor').value) || 700;
+  var wpd = parseFloat(document.getElementById('sec_wpd').value) || 2;
+  var delivery = parseFloat(document.getElementById('sec_delivery').value) || 0;
+  var sellRate = parseFloat(document.getElementById('sec_rate').value) || 850;
+  var opening = parseFloat(document.getElementById('sec_opening').value) || 3000;
+  var minSqft = parseFloat(document.getElementById('sec_minsqft').value) || 20;
+  var usdRate = parseFloat(document.getElementById('sec_usdrate').value) || 60;
+
+  if (!w || !h) return;
+
+  // USD unit prices
+  var gp = function(id,def){ var el=document.getElementById(id); return el ? (parseFloat(el.value)||def) : def; };
+  var P = {
+    cornerSF: gp('p_sec_cornerSF',0.33), cornerDR: gp('p_sec_cornerDR',0.31),
+    pullUL: gp('p_sec_pullU',1.50), pullUR: gp('p_sec_pullU',1.50),
+    pullBL: gp('p_sec_pullB',0.11), pullBR: gp('p_sec_pullB',0.11),
+    connRod: gp('p_sec_connRod',0.78), botMRod: gp('p_sec_botMRod',0.04),
+    mRodFix: gp('p_sec_mRodFix',0.04), tBar: gp('p_sec_tBar',0.03),
+    clip8: gp('p_sec_clip8',0.06), clip6: gp('p_sec_clip6',0.06), clip4: gp('p_sec_clip4',0.05),
+    pin: gp('p_sec_pin',0.027), magStrip: gp('p_sec_magStrip',0.2004),
+    weatherStrip: gp('p_sec_weather',0.0316),
+    hookLock: gp('p_sec_hookLock',4.91), maskLock: gp('p_sec_maskLock',3.86),
+    mesh: gp('p_sec_mesh',1.20),
+    wl1019: gp('p_sec_wl1019',3.48), wl1316: gp('p_sec_wl1316',4.80),
+    wl0816: gp('p_sec_wl0816',3.48), wl1417: gp('p_sec_wl1417',3.86),
+    alWL4016: gp('p_sec_pkg',7.35)*gp('p_sec4016_kg',0.418),
+    alWL3418: gp('p_sec3418_pkg',6.35)*gp('p_sec3418_kg',0.585),
+    alWL4026: gp('p_sec4026_pkg',5.35)*gp('p_sec4026_kg',0.786),
+    alWL4013: gp('p_sec4013_pkg',4.35)*gp('p_sec4013_kg',0.458)
+  };
+
+  var sfM = (h-15)/1000, prM = (h-78)/1000;
+  var urM = (w-32)/1000, brM = (w-32)/1000;
+  var hM = h/1000;
+  var pullQty = mode === 'twoway' ? 2 : 1;
+  var adjMult = mode === 'twoway' ? 2 : 1;
+
+  // Auto mesh calc (simplified - use 8cm pieces)
+  var usableW = mode === 'oneway' ? w - 64 : (w - 94) / 2;
+  var n8 = 2 * Math.floor((usableW + 5) / (2 * 78.5));
+  var rem = usableW - (n8 * 78.5) + 5;
+  var n6 = 0, n4 = 0;
+  if (rem >= 59.5) { n6 = 2; rem -= 59.5 * 2; }
+  if (mode === 'twoway') { n8 *= 2; n6 *= 2; n4 *= 2; }
+  var totalMesh = n8 + n6 + n4;
+
+  var adj = getAdj(Math.max(0, Math.min(50, rem)));
+  var meshH = h - 86;
+  var meshStockM = meshH <= 2300 ? 2.3 : meshH <= 2500 ? 2.5 : 3.0;
+
+  // Costs USD
+  var cAlSF = 2 * sfM * P.alWL4016;
+  var cAlPR = pullQty * prM * P.alWL3418;
+  var cAlUR = urM * P.alWL4026;
+  var cAlBR = brM * P.alWL4013;
+  var cMesh = totalMesh * meshStockM * P.mesh;
+  var cAdj = (adj.wl1019 * P.wl1019 + adj.wl1316 * P.wl1316 + adj.wl0816 * P.wl0816 + adj.wl1417 * P.wl1417) * adjMult;
+
+  var qConnRod = totalMesh > 0 ? (totalMesh/2) - 1 : 0;
+  var qBotMRod = totalMesh > 0 ? (totalMesh/2) - 1 : 0;
+  var qMRodFix = totalMesh;
+  var qTBar = mode === 'twoway' ? 4 : 2;
+
+  var cParts = (
+    2*P.cornerSF + 2*P.cornerDR +
+    (mode==='oneway' ? P.pullUL + P.pullBL : 2*P.pullUL + 2*P.pullBL) +
+    qConnRod*P.connRod + qBotMRod*P.botMRod + qMRodFix*P.mRodFix +
+    qTBar*P.tBar + n8*2*P.clip8 + n6*2*P.clip6 + n4*2*P.clip4 +
+    (qConnRod+qBotMRod+qMRodFix)*2*P.pin +
+    P.hookLock + (mode==='twoway'?P.maskLock:0) +
+    hM*P.magStrip + hM*P.weatherStrip
+  );
+
+  var totalUSD = cAlSF + cAlPR + cAlUR + cAlBR + cMesh + cAdj + cParts;
+  var totalPHP = totalUSD * usdRate;
+  var laborCost = laborRate / wpd;
+  var totalCost = totalPHP + laborCost + delivery;
+
+  var sqft = (w/25.4) * (h/25.4) / 144;
+  var billSqft = Math.max(sqft, minSqft);
+  var sellingPrice = billSqft * sellRate + (mode === 'twoway' ? opening : 0);
+  var profit = sellingPrice - totalCost;
+  var margin = (profit / sellingPrice) * 100;
+
+  var fmt = function(v) { return '₱' + v.toLocaleString('en-PH', {minimumFractionDigits:2, maximumFractionDigits:2}); };
+  var marginColor = margin >= 70 ? '#27ae60' : margin >= 50 ? '#e67e22' : '#c0392b';
+  var barColor = marginColor;
+  var verdict = margin >= 70
+    ? {cls:'good', msg:'✅ Excellent margin! ' + margin.toFixed(1) + '% — very profitable project.'}
+    : margin >= 50
+    ? {cls:'warn', msg:'⚠️ Acceptable at ' + margin.toFixed(1) + '%. Consider reviewing pricing.'}
+    : {cls:'bad',  msg:'🛑 Low margin at ' + margin.toFixed(1) + '%. Review costs or pricing.'};
+
+  var modeName = mode === 'oneway' ? 'One Way' : 'Two Way';
+
+  document.getElementById('sec_results').innerHTML = `
+    <div class="result-card">
+      <div class="result-header">
+        <h2>🔒 Security Screen — ${modeName}</h2>
+        <div class="result-meta">${w}mm × ${h}mm | ${sqft.toFixed(2)} sqft (billed: ${billSqft.toFixed(2)}) | ₱${sellRate}/sqft${mode==='twoway'?' + ₱'+opening+' opening':''}</div>
+      </div>
+
+      <div class="summary-grid">
+        <div class="summary-cell"><div class="summary-label">Selling Price</div><div class="summary-value">${fmt(sellingPrice)}</div></div>
+        <div class="summary-cell"><div class="summary-label">Total Cost</div><div class="summary-value amber">${fmt(totalCost)}</div></div>
+        <div class="summary-cell"><div class="summary-label">Gross Profit</div><div class="summary-value ${profit>=0?'green':'red'}">${fmt(profit)}</div></div>
+        <div class="summary-cell"><div class="summary-label">Gross Margin</div><div class="summary-value" style="color:${marginColor}">${margin.toFixed(1)}%</div></div>
+      </div>
+
+      <div class="margin-bar-wrap">
+        <div class="margin-bar-label"><span>Cost: ${fmt(totalCost)} (${(100-margin).toFixed(1)}%)</span><span>Profit: ${fmt(profit)} (${margin.toFixed(1)}%)</span></div>
+        <div class="margin-bar-bg"><div class="margin-bar-fill" style="width:${Math.max(0,Math.min(100,margin))}%;background:${barColor}"></div></div>
+      </div>
+
+      <div class="bom-section">
+        <div class="bom-title">Bill of Materials & Cost Breakdown</div>
+        <table>
+          <thead><tr><th>Component</th><th>Detail</th><th class="r">Cost (USD)</th><th class="r">Cost (₱)</th></tr></thead>
+          <tbody>
+            <tr><td>WL4016 Side frame (×2)</td><td>${(2*sfM).toFixed(3)}m × $${P.alWL4016.toFixed(4)}/m</td><td class="r">$${cAlSF.toFixed(2)}</td><td class="r">${fmt(cAlSF*usdRate)}</td></tr>
+            <tr><td>WL3418 Pull rod (×${pullQty})</td><td>${(pullQty*prM).toFixed(3)}m × $${P.alWL3418.toFixed(4)}/m</td><td class="r">$${cAlPR.toFixed(2)}</td><td class="r">${fmt(cAlPR*usdRate)}</td></tr>
+            <tr><td>WL4026 Upper rail (×1)</td><td>${urM.toFixed(3)}m × $${P.alWL4026.toFixed(4)}/m</td><td class="r">$${cAlUR.toFixed(2)}</td><td class="r">${fmt(cAlUR*usdRate)}</td></tr>
+            <tr><td>WL4013 Bottom rail (×1)</td><td>${brM.toFixed(3)}m × $${P.alWL4013.toFixed(4)}/m</td><td class="r">$${cAlBR.toFixed(2)}</td><td class="r">${fmt(cAlBR*usdRate)}</td></tr>
+            <tr><td>Security mesh (${n8} pcs 8cm${n6>0?', '+n6+' pcs 6cm':''})</td><td>${totalMesh} pcs × ${meshStockM}m × $${P.mesh}/m</td><td class="r">$${cMesh.toFixed(2)}</td><td class="r">${fmt(cMesh*usdRate)}</td></tr>
+            <tr><td>Adjusters (WL1019/1316/0816/1417)</td><td>×${adjMult} sides</td><td class="r">$${cAdj.toFixed(2)}</td><td class="r">${fmt(cAdj*usdRate)}</td></tr>
+            <tr><td>Hardware & accessories</td><td>Clips, lock, pins, strips etc.</td><td class="r">$${cParts.toFixed(2)}</td><td class="r">${fmt(cParts*usdRate)}</td></tr>
+            <tr class="total-row"><td colspan="2">Total Materials (at $1 = ₱${usdRate})</td><td class="r">$${totalUSD.toFixed(2)}</td><td class="r">${fmt(totalPHP)}</td></tr>
+            <tr><td>Labor (₱${laborRate}/day ÷ ${wpd} units)</td><td>1 manpower</td><td class="r">—</td><td class="r">${fmt(laborCost)}</td></tr>
+            ${delivery>0?`<tr><td>Delivery</td><td></td><td class="r">—</td><td class="r">${fmt(delivery)}</td></tr>`:''}
+            <tr class="total-row"><td colspan="2"><strong>TOTAL COST</strong></td><td class="r"></td><td class="r"><strong>${fmt(totalCost)}</strong></td></tr>
+            <tr class="profit-row"><td colspan="2">GROSS PROFIT</td><td class="r"></td><td class="r">${fmt(profit)}</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="verdict">
+        <div class="verdict-box ${verdict.cls}">${verdict.msg}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px">
+          ⚠️ Mesh count is auto-estimated. For exact cost, verify actual mesh pieces used per job.<br>
+          USD rate: $1 = ₱${usdRate} | Adjust in the USD rate field above.
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+
+// ── POLYCARBONATE DOOR ──────────────────────────────────────────────
+function calcPoly() {
+  var w    = parseFloat(document.getElementById('poly_w').value) || 0;
+  var h    = parseFloat(document.getElementById('poly_h').value) || 0;
+  var mode = document.getElementById('poly_mode').value;
+  var board= document.getElementById('poly_board').value;
+  var laborRate  = parseFloat(document.getElementById('poly_labor').value)    || 700;
+  var delivery   = parseFloat(document.getElementById('poly_delivery').value) || 0;
+  var sellRate   = parseFloat(document.getElementById('poly_rate').value)     || 850;
+  var open1      = parseFloat(document.getElementById('poly_open1').value)    || 1200;
+  var open2      = parseFloat(document.getElementById('poly_open2').value)    || 4200;
+  var minSqft    = parseFloat(document.getElementById('poly_minsqft').value)  || 20;
+  var usdRate    = parseFloat(document.getElementById('poly_usd').value)      || 60;
+
+  if (!w || !h) return;
+
+  // ── ALUMINUM PROFILES (USD/meter) — price = weight_per_m × $4.50/kg ──
+  var gpp = function(id,def){ var el=document.getElementById(id); return el?(parseFloat(el.value)||def):def; };
+  var pkg4 = gpp('p_poly_pkg',4.50);
+  var AL = {
+    WL6320: { name:'Side frame',  kg_m:gpp('p_poly6320_kg',0.523), usd_m:pkg4*gpp('p_poly6320_kg',0.523) },
+    WL5643: { name:'Sliding rod', kg_m:gpp('p_poly5643_kg',0.856), usd_m:gpp('p_poly5643_pkg',4.50)*gpp('p_poly5643_kg',0.856) },
+    WL6455: { name:'Upper frame', kg_m:gpp('p_poly6455_kg',1.386), usd_m:gpp('p_poly6455_pkg',4.50)*gpp('p_poly6455_kg',1.386) },
+    WL6413: { name:'Bottom rail', kg_m:gpp('p_poly6413_kg',0.535), usd_m:gpp('p_poly6413_pkg',4.50)*gpp('p_poly6413_kg',0.535) },
+  };
+  var HW = {
+    conn_cover:  gpp('p_poly_conn_bag',5.10)    / gpp('p_poly_conn_pcs',100),
+    door_rail:   gpp('p_poly_door_bag',21.85)   / gpp('p_poly_door_pcs',50),
+    bot_cover:   gpp('p_poly_bot_bag',12.70)    / gpp('p_poly_bot_pcs',50),
+    move_wheels: gpp('p_poly_wheels_bag',167.50)/ gpp('p_poly_wheels_pcs',50),
+    upper_wheel: gpp('p_poly_upper_bag',105.00) / gpp('p_poly_upper_pcs',450),
+    mrod_bot:    gpp('p_poly_mrod_bag',32.00)   / gpp('p_poly_mrod_pcs',450),
+    screw:       gpp('p_poly_screw_bag',5.50)   / gpp('p_poly_screw_pcs',450),
+  };
+
+  // ── BOARD PRICE ──
+  var boardPriceM = board === 'frosted' ? 1.05 : 1.00;  // USD per meter
+
+  // ── CUTTINGS (approximate — deduct ~50mm each side) ──
+  // Actual formula from your HTML calculator would be more precise
+  // Using standard accordion door cutting rules
+  var sfM  = (h - 50) / 1000;   // WL6320 side frame ×2
+  var srM  = (h - 50) / 1000;   // WL5643 sliding rod ×1 (1way) or ×2 (2way)
+  var ufM  = (w - 50) / 1000;   // WL6455 upper frame ×1
+  var brM  = (w - 50) / 1000;   // WL6413 bottom rail ×1
+  var srQty = mode === 'twoway' ? 2 : 1;
+
+  var cAl_sf = 2    * sfM * AL.WL6320.usd_m;
+  var cAl_sr = srQty* srM * AL.WL5643.usd_m;
+  var cAl_uf = 1    * ufM * AL.WL6455.usd_m;
+  var cAl_br = 1    * brM * AL.WL6413.usd_m;
+  var cAl    = cAl_sf + cAl_sr + cAl_uf + cAl_br;
+
+  // ── PC PANELS ──
+  // Each panel is 5cm (50mm) wide
+  // Number of panels = floor(width / 50)
+  var nPanels = Math.floor(w / 50);
+
+  // Stock height selection: 2.1m, 2.4m, 2.8m, 3.0m
+  var stockM = h <= 2100 ? 2.1 : h <= 2400 ? 2.4 : h <= 2800 ? 2.8 : 3.0;
+  var cPC = nPanels * stockM * boardPriceM;
+
+  // ── HARDWARE QUANTITIES ──
+  var qConn   = 2;
+  var qDoor   = 2;
+  var qBot    = mode === 'twoway' ? 2 : 1;
+  var qWheels = mode === 'twoway' ? 2 : 1;
+  var qUpper  = Math.max(0, Math.floor(nPanels / 2) - 1);
+  var qMrod   = Math.max(0, Math.floor(nPanels / 2) - 1);
+  var qScrew  = qUpper + qMrod;
+  // Mesh clips = number of panels (upper + lower)
+  var qClipU  = nPanels;
+  var qClipL  = nPanels;
+
+  var cHW = (
+    qConn   * HW.conn_cover +
+    qDoor   * HW.door_rail  +
+    qBot    * HW.bot_cover  +
+    qWheels * HW.move_wheels+
+    qUpper  * HW.upper_wheel+
+    qMrod   * HW.mrod_bot   +
+    qScrew  * HW.screw
+  );
+
+  var totalUSD  = cAl + cPC + cHW;
+  var totalPHP  = totalUSD * usdRate;
+
+  // ── LABOR — auto based on size ──
+  var isLarge = (w > 2000 || h > 2000);
+  var wpd = isLarge ? 1 : 2;
+  var laborCost = laborRate / wpd;
+
+  var totalCost = totalPHP + laborCost + delivery;
+
+  // ── SELLING PRICE ──
+  var sqft     = (w / 25.4) * (h / 25.4) / 144;
+  var billSqft = Math.max(sqft, minSqft);
+  var opening  = mode === 'twoway' ? open2 : open1;
+  var sellPrice = (billSqft * sellRate) + opening;
+
+  var profit = sellPrice - totalCost;
+  var margin = (profit / sellPrice) * 100;
+
+  var fmt = function(v){ return '₱' + v.toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+  var fmtU = function(v){ return '$' + v.toFixed(4); };
+  var marginColor = margin >= 70 ? '#27ae60' : margin >= 50 ? '#e67e22' : '#c0392b';
+
+  var verdict = margin >= 70
+    ? {cls:'good', msg:'✅ Excellent margin at ' + margin.toFixed(1) + '%! Very profitable project.'}
+    : margin >= 50
+    ? {cls:'warn', msg:'⚠️ Acceptable at ' + margin.toFixed(1) + '%. Review if costs can be reduced.'}
+    : {cls:'bad',  msg:'🛑 Low margin at ' + margin.toFixed(1) + '%. Consider revising selling price.'};
+
+  var boardLabel = board === 'frosted' ? 'Frosted ($1.05/m)' : 'Transparent ($1.00/m)';
+  var modeName   = mode === 'twoway' ? 'Two Way' : 'One Way';
+  var sizeNote   = isLarge ? '⚠️ Large size — 1 unit/day' : '✅ Normal size — 2 units/day';
+
+  document.getElementById('poly_results').innerHTML = `
+    <div class="result-card">
+      <div class="result-header">
+        <h2>🚪 Polycarbonate Door — ${modeName} · ${boardLabel}</h2>
+        <div class="result-meta">
+          ${w}mm × ${h}mm | ${nPanels} panels (5cm each) | Stock: ${stockM}m |
+          ${sqft.toFixed(2)} sqft (billed: ${billSqft.toFixed(2)}) | ${sizeNote}
+        </div>
+      </div>
+
+      <div class="summary-grid">
+        <div class="summary-cell"><div class="summary-label">Selling Price</div><div class="summary-value">${fmt(sellPrice)}</div></div>
+        <div class="summary-cell"><div class="summary-label">Total Cost</div><div class="summary-value amber">${fmt(totalCost)}</div></div>
+        <div class="summary-cell"><div class="summary-label">Gross Profit</div><div class="summary-value ${profit>=0?'green':'red'}">${fmt(profit)}</div></div>
+        <div class="summary-cell"><div class="summary-label">Gross Margin</div><div class="summary-value" style="color:${marginColor}">${margin.toFixed(1)}%</div></div>
+      </div>
+
+      <div class="margin-bar-wrap">
+        <div class="margin-bar-label"><span>Cost: ${fmt(totalCost)} (${(100-margin).toFixed(1)}%)</span><span>Profit: ${fmt(profit)} (${margin.toFixed(1)}%)</span></div>
+        <div class="margin-bar-bg"><div class="margin-bar-fill" style="width:${Math.max(0,Math.min(100,margin))}%;background:${marginColor}"></div></div>
+      </div>
+
+      <div class="bom-section">
+        <div class="bom-title">Bill of Materials & Cost Breakdown</div>
+        <table>
+          <thead>
+            <tr><th>Component</th><th>Qty / Detail</th><th class="r">Cost (USD)</th><th class="r">Cost (₱)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>WL6320 Side frame (×2)</td><td>${(2*sfM).toFixed(3)}m × $${AL.WL6320.usd_m.toFixed(4)}/m</td><td class="r">$${cAl_sf.toFixed(4)}</td><td class="r">${fmt(cAl_sf*usdRate)}</td></tr>
+            <tr><td>WL5643 Sliding rod (×${srQty})</td><td>${(srQty*srM).toFixed(3)}m × $${AL.WL5643.usd_m.toFixed(4)}/m</td><td class="r">$${cAl_sr.toFixed(4)}</td><td class="r">${fmt(cAl_sr*usdRate)}</td></tr>
+            <tr><td>WL6455 Upper frame (×1)</td><td>${ufM.toFixed(3)}m × $${AL.WL6455.usd_m.toFixed(4)}/m</td><td class="r">$${cAl_uf.toFixed(4)}</td><td class="r">${fmt(cAl_uf*usdRate)}</td></tr>
+            <tr><td>WL6413 Bottom rail (×1)</td><td>${brM.toFixed(3)}m × $${AL.WL6413.usd_m.toFixed(4)}/m</td><td class="r">$${cAl_br.toFixed(4)}</td><td class="r">${fmt(cAl_br*usdRate)}</td></tr>
+            <tr class="total-row"><td colspan="2">Aluminum subtotal</td><td class="r">$${cAl.toFixed(4)}</td><td class="r">${fmt(cAl*usdRate)}</td></tr>
+
+            <tr><td>PC panels (${boardLabel})</td><td>${nPanels} panels × ${stockM}m × $${boardPriceM.toFixed(2)}/m</td><td class="r">$${cPC.toFixed(4)}</td><td class="r">${fmt(cPC*usdRate)}</td></tr>
+
+            <tr><td>Connection cover</td><td>${qConn} pcs × $${HW.conn_cover.toFixed(4)}/pc</td><td class="r">$${(qConn*HW.conn_cover).toFixed(4)}</td><td class="r">${fmt(qConn*HW.conn_cover*usdRate)}</td></tr>
+            <tr><td>Door rail corner joint</td><td>${qDoor} pcs × $${HW.door_rail.toFixed(4)}/pc</td><td class="r">$${(qDoor*HW.door_rail).toFixed(4)}</td><td class="r">${fmt(qDoor*HW.door_rail*usdRate)}</td></tr>
+            <tr><td>Bottom cover of sliding rod</td><td>${qBot} pcs × $${HW.bot_cover.toFixed(4)}/pc</td><td class="r">$${(qBot*HW.bot_cover).toFixed(4)}</td><td class="r">${fmt(qBot*HW.bot_cover*usdRate)}</td></tr>
+            <tr><td>Move wheels (stainless)</td><td>${qWheels} pcs × $${HW.move_wheels.toFixed(4)}/pc</td><td class="r">$${(qWheels*HW.move_wheels).toFixed(4)}</td><td class="r">${fmt(qWheels*HW.move_wheels*usdRate)}</td></tr>
+            <tr><td>Upper wheel of M rod</td><td>${qUpper} pcs × $${HW.upper_wheel.toFixed(4)}/pc</td><td class="r">$${(qUpper*HW.upper_wheel).toFixed(4)}</td><td class="r">${fmt(qUpper*HW.upper_wheel*usdRate)}</td></tr>
+            <tr><td>M-rod bottom movable</td><td>${qMrod} pcs × $${HW.mrod_bot.toFixed(4)}/pc</td><td class="r">$${(qMrod*HW.mrod_bot).toFixed(4)}</td><td class="r">${fmt(qMrod*HW.mrod_bot*usdRate)}</td></tr>
+            <tr><td>3.5×10 screws</td><td>${qScrew} pcs × $${HW.screw.toFixed(4)}/pc</td><td class="r">$${(qScrew*HW.screw).toFixed(4)}</td><td class="r">${fmt(qScrew*HW.screw*usdRate)}</td></tr>
+
+            <tr class="total-row"><td colspan="2">Total Materials (at $1=₱${usdRate})</td><td class="r">$${totalUSD.toFixed(4)}</td><td class="r">${fmt(totalPHP)}</td></tr>
+            <tr><td>Labor (₱${laborRate}/day ÷ ${wpd} units — ${isLarge?'large size':'normal size'})</td><td>1 manpower</td><td class="r">—</td><td class="r">${fmt(laborCost)}</td></tr>
+            ${delivery>0?`<tr><td>Delivery</td><td></td><td class="r">—</td><td class="r">${fmt(delivery)}</td></tr>`:''}
+            <tr class="total-row"><td colspan="2"><strong>TOTAL COST</strong></td><td class="r"></td><td class="r"><strong>${fmt(totalCost)}</strong></td></tr>
+            <tr><td>Selling rate</td><td>${billSqft.toFixed(2)} sqft × ₱${sellRate} + ₱${opening} opening</td><td class="r"></td><td class="r">${fmt(sellPrice)}</td></tr>
+            <tr class="profit-row"><td colspan="2">GROSS PROFIT</td><td class="r"></td><td class="r">${fmt(profit)}</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="verdict">
+        <div class="verdict-box ${verdict.cls}">${verdict.msg}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px">
+          ⚠️ Aluminum cuttings use estimated deductions. For exact cost match your Polycarbonate HTML calculator.<br>
+          USD rate: $1 = ₱${usdRate} | Board: ${boardLabel} | Panels: ${nPanels} pcs (5cm wide each)
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+
+// ── SEC & POLY PRICE PANEL PREVIEWS ──────────────────────────────
+function updateSecPreviews() {
+  var usd = parseFloat(document.getElementById('p_sec_usd').value) || 60;
+  var g = function(id) { return parseFloat(document.getElementById(id).value) || 0; };
+  var s = function(id, v) { var el=document.getElementById(id); if(el) el.textContent=v; };
+  s('prev_sec4016',  '₱'+(g('p_sec_pkg')   *g('p_sec4016_kg') *usd).toFixed(2)+'/m');
+  s('prev_sec3418',  '₱'+(g('p_sec3418_pkg')*g('p_sec3418_kg')*usd).toFixed(2)+'/m');
+  s('prev_sec4026',  '₱'+(g('p_sec4026_pkg')*g('p_sec4026_kg')*usd).toFixed(2)+'/m');
+  s('prev_sec4013',  '₱'+(g('p_sec4013_pkg')*g('p_sec4013_kg')*usd).toFixed(2)+'/m');
+  s('prev_sec_mesh', '₱'+(g('p_sec_mesh')*usd).toFixed(2)+'/m');
+  s('prev_sec_cornerSF','₱'+(g('p_sec_cornerSF')*usd).toFixed(2)+'/pc');
+  s('prev_sec_cornerDR','₱'+(g('p_sec_cornerDR')*usd).toFixed(2)+'/pc');
+  s('prev_sec_pullU',   '₱'+(g('p_sec_pullU')   *usd).toFixed(2)+'/pc');
+  s('prev_sec_pullB',   '₱'+(g('p_sec_pullB')   *usd).toFixed(2)+'/pc');
+  s('prev_sec_connRod', '₱'+(g('p_sec_connRod') *usd).toFixed(2)+'/pc');
+  s('prev_sec_botMRod', '₱'+(g('p_sec_botMRod') *usd).toFixed(2)+'/pc');
+  s('prev_sec_mRodFix', '₱'+(g('p_sec_mRodFix') *usd).toFixed(2)+'/pc');
+  s('prev_sec_tBar',    '₱'+(g('p_sec_tBar')    *usd).toFixed(2)+'/pc');
+  s('prev_sec_clip8',   '₱'+(g('p_sec_clip8')   *usd).toFixed(2)+'/pc');
+  s('prev_sec_clip6',   '₱'+(g('p_sec_clip6')   *usd).toFixed(2)+'/pc');
+  s('prev_sec_clip4',   '₱'+(g('p_sec_clip4')   *usd).toFixed(2)+'/pc');
+  s('prev_sec_pin',     '₱'+(g('p_sec_pin')     *usd).toFixed(4)+'/pc');
+  s('prev_sec_hookLock','₱'+(g('p_sec_hookLock')*usd).toFixed(2));
+  s('prev_sec_maskLock','₱'+(g('p_sec_maskLock')*usd).toFixed(2));
+  s('prev_sec_magStrip','₱'+(g('p_sec_magStrip')*usd).toFixed(4)+'/m');
+  s('prev_sec_weather', '₱'+(g('p_sec_weather') *usd).toFixed(4)+'/m');
+  s('prev_sec_wl1019',  '₱'+(g('p_sec_wl1019') *usd).toFixed(2)+'/pc');
+  s('prev_sec_wl1316',  '₱'+(g('p_sec_wl1316') *usd).toFixed(2)+'/pc');
+  s('prev_sec_wl0816',  '₱'+(g('p_sec_wl0816') *usd).toFixed(2)+'/pc');
+  s('prev_sec_wl1417',  '₱'+(g('p_sec_wl1417') *usd).toFixed(2)+'/pc');
+}
+
+function updatePolyPreviews() {
+  var usd = parseFloat(document.getElementById('p_poly_usd').value) || 60;
+  var g = function(id){ return parseFloat(document.getElementById(id).value)||0; };
+  var s = function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
+  var pkg = g('p_poly_pkg');
+  s('prev_poly6320','₱'+(pkg*g('p_poly6320_kg')*usd).toFixed(2)+'/m');
+  s('prev_poly5643','₱'+(pkg*g('p_poly5643_kg')*usd).toFixed(2)+'/m');
+  s('prev_poly6455','₱'+(pkg*g('p_poly6455_kg')*usd).toFixed(2)+'/m');
+  s('prev_poly6413','₱'+(pkg*g('p_poly6413_kg')*usd).toFixed(2)+'/m');
+  s('prev_poly_frosted',     '₱'+(g('p_poly_frosted')     *usd*3).toFixed(2)+'/3m pc');
+  s('prev_poly_transparent', '₱'+(g('p_poly_transparent') *usd*3).toFixed(2)+'/3m pc');
+  s('prev_poly_conn',   '₱'+(g('p_poly_conn_bag')   /g('p_poly_conn_pcs')   *usd).toFixed(4));
+  s('prev_poly_door',   '₱'+(g('p_poly_door_bag')   /g('p_poly_door_pcs')   *usd).toFixed(4));
+  s('prev_poly_bot',    '₱'+(g('p_poly_bot_bag')    /g('p_poly_bot_pcs')    *usd).toFixed(4));
+  s('prev_poly_wheels', '₱'+(g('p_poly_wheels_bag') /g('p_poly_wheels_pcs') *usd).toFixed(4));
+  s('prev_poly_upper',  '₱'+(g('p_poly_upper_bag')  /g('p_poly_upper_pcs')  *usd).toFixed(4));
+  s('prev_poly_mrod',   '₱'+(g('p_poly_mrod_bag')   /g('p_poly_mrod_pcs')   *usd).toFixed(4));
+  s('prev_poly_screw',  '₱'+(g('p_poly_screw_bag')  /g('p_poly_screw_pcs')  *usd).toFixed(4));
+}
+
+// Hook into openPricing to init previews
+var _origOpenPricing = openPricing;
+openPricing = function() { _origOpenPricing(); updateSecPreviews(); updatePolyPreviews(); updateTTBPreviews(); };
+
+// Hook savePricing to also update sec/poly rates in their calculators
+var _origSavePricing = savePricing;
+savePricing = function() {
+  _origSavePricing();
+  // Update Security Screen USD rate
+  var secUsd = parseFloat(document.getElementById('p_sec_usd').value) || 60;
+  document.getElementById('sec_usdrate').value = secUsd;
+  // Update Poly USD rate
+  var polyUsd = parseFloat(document.getElementById('p_poly_usd').value) || 60;
+  document.getElementById('poly_usd').value = polyUsd;
+  saveTTBRates(); calcSec(); calcPoly(); calcTTB();
+};
+
+// ── TOP TO BOTTOM SCREEN ──────────────────────────────────────────
+// TTB Material rates (stored separately from honeycomb R object)
+var TTB = {
+  cass_m:  174.0579,  // YO88A Cassette PHP/m
+  round_m: 156.0331,  // YO57 Round tube+mesh PHP/m
+  draw_m:  105.9793,  // YO33A Drawing bar PHP/m
+  side_m:  120.1048,  // YO70 Side rail PHP/m
+  // Parts (PHP each, fixed qty per unit)
+  corner:  0.47 * 8.8 * 2,  // ×2
+  spring:  2.47 * 8.8 * 1,
+  cushion: 1.50 * 8.8 * 1,
+  endcap:  0.29 * 8.8 * 2,
+  locking: 0.36 * 8.8 * 2,
+  ropeclip:0.79 * 8.8 * 1,
+  metal:   0.18 * 8.8 * 3,
+  handle:  0.61 * 8.8 * 2,
+  pvctube: 0.69 * 8.8 * 1,
+  pvcbar:  0.25 * 8.8 * 1,
+  accsset: 16.20 * 8.8 * 1,
+};
+
+function updateTTBPreviews() {
+  var rmb = parseFloat(document.getElementById('p_rmb').value) || 8.8;
+  document.getElementById('ttb_rmb_display').textContent = rmb.toFixed(2);
+  var calcM = function(rmb_pc, len) { return (rmb_pc * rmb) / len; };
+  var calcP = function(rmb_pc, qty) { return rmb_pc * rmb * qty; };
+  document.getElementById('prev_ttb_cass').textContent  = '₱' + calcM(+document.getElementById('p_ttb_cass_rmb').value,  +document.getElementById('p_ttb_cass_len').value).toFixed(2) + '/m';
+  document.getElementById('prev_ttb_round').textContent = '₱' + calcM(+document.getElementById('p_ttb_round_rmb').value, +document.getElementById('p_ttb_round_len').value).toFixed(2) + '/m';
+  document.getElementById('prev_ttb_draw').textContent  = '₱' + calcM(+document.getElementById('p_ttb_draw_rmb').value,  +document.getElementById('p_ttb_draw_len').value).toFixed(2) + '/m';
+  document.getElementById('prev_ttb_side').textContent  = '₱' + calcM(+document.getElementById('p_ttb_side_rmb').value,  +document.getElementById('p_ttb_side_len').value).toFixed(2) + '/m';
+  document.getElementById('prev_ttb_corner').textContent  = '₱' + calcP(+document.getElementById('p_ttb_corner').value,  2).toFixed(2);
+  document.getElementById('prev_ttb_spring').textContent  = '₱' + calcP(+document.getElementById('p_ttb_spring').value,  1).toFixed(2);
+  document.getElementById('prev_ttb_cushion').textContent = '₱' + calcP(+document.getElementById('p_ttb_cushion').value, 1).toFixed(2);
+  document.getElementById('prev_ttb_endcap').textContent  = '₱' + calcP(+document.getElementById('p_ttb_endcap').value,  2).toFixed(2);
+  document.getElementById('prev_ttb_locking').textContent = '₱' + calcP(+document.getElementById('p_ttb_locking').value, 2).toFixed(2);
+  document.getElementById('prev_ttb_ropeclip').textContent= '₱' + calcP(+document.getElementById('p_ttb_ropeclip').value,1).toFixed(2);
+  document.getElementById('prev_ttb_metal').textContent   = '₱' + calcP(+document.getElementById('p_ttb_metal').value,   3).toFixed(2);
+  document.getElementById('prev_ttb_handle').textContent  = '₱' + calcP(+document.getElementById('p_ttb_handle').value,  2).toFixed(2);
+  document.getElementById('prev_ttb_pvctube').textContent = '₱' + calcP(+document.getElementById('p_ttb_pvctube').value, 1).toFixed(2);
+  document.getElementById('prev_ttb_pvcbar').textContent  = '₱' + calcP(+document.getElementById('p_ttb_pvcbar').value,  1).toFixed(2);
+  document.getElementById('prev_ttb_accsset').textContent = '₱' + calcP(+document.getElementById('p_ttb_accsset').value, 1).toFixed(2);
+}
+
+function saveTTBRates() {
+  var rmb = parseFloat(document.getElementById('p_rmb').value) || 8.8;
+  TTB.cass_m  = (+document.getElementById('p_ttb_cass_rmb').value  * rmb) / +document.getElementById('p_ttb_cass_len').value;
+  TTB.round_m = (+document.getElementById('p_ttb_round_rmb').value * rmb) / +document.getElementById('p_ttb_round_len').value;
+  TTB.draw_m  = (+document.getElementById('p_ttb_draw_rmb').value  * rmb) / +document.getElementById('p_ttb_draw_len').value;
+  TTB.side_m  = (+document.getElementById('p_ttb_side_rmb').value  * rmb) / +document.getElementById('p_ttb_side_len').value;
+  TTB.corner   = +document.getElementById('p_ttb_corner').value   * rmb * 2;
+  TTB.spring   = +document.getElementById('p_ttb_spring').value   * rmb * 1;
+  TTB.cushion  = +document.getElementById('p_ttb_cushion').value  * rmb * 1;
+  TTB.endcap   = +document.getElementById('p_ttb_endcap').value   * rmb * 2;
+  TTB.locking  = +document.getElementById('p_ttb_locking').value  * rmb * 2;
+  TTB.ropeclip = +document.getElementById('p_ttb_ropeclip').value * rmb * 1;
+  TTB.metal    = +document.getElementById('p_ttb_metal').value    * rmb * 3;
+  TTB.handle   = +document.getElementById('p_ttb_handle').value   * rmb * 2;
+  TTB.pvctube  = +document.getElementById('p_ttb_pvctube').value  * rmb * 1;
+  TTB.pvcbar   = +document.getElementById('p_ttb_pvcbar').value   * rmb * 1;
+  TTB.accsset  = +document.getElementById('p_ttb_accsset').value  * rmb * 1;
+}
+
+function calcTTB() {
+  var w        = parseFloat(document.getElementById('ttb_w').value)       || 0;
+  var h        = parseFloat(document.getElementById('ttb_h').value)       || 0;
+  var dedCass  = parseFloat(document.getElementById('ttb_ded_cass').value) || 16;
+  var dedRound = parseFloat(document.getElementById('ttb_ded_round').value)|| 14;
+  var dedDraw  = parseFloat(document.getElementById('ttb_ded_draw').value) || 15;
+  var dedSide  = parseFloat(document.getElementById('ttb_ded_side').value) || 48;
+  var meshAdd  = parseFloat(document.getElementById('ttb_mesh_add').value) || 50;
+  var meshDed  = parseFloat(document.getElementById('ttb_mesh_ded').value) || 14;
+  var laborRate= parseFloat(document.getElementById('ttb_labor').value)    || 700;
+  var wpd      = parseFloat(document.getElementById('ttb_wpd').value)      || 4;
+  var delivery = parseFloat(document.getElementById('ttb_delivery').value) || 0;
+  var sellRate = parseFloat(document.getElementById('ttb_rate').value)     || 250;
+  var minSqft  = parseFloat(document.getElementById('ttb_minsqft').value)  || 15;
+
+  if (!w || !h) return;
+
+  // Cuttings
+  var lenCass  = w - dedCass;
+  var lenRound = w - dedRound;
+  var lenDraw  = w - dedDraw;
+  var lenSide  = h - dedSide;
+  var meshH    = h + meshAdd;
+  var meshW    = w - meshDed;
+
+  // Aluminum costs
+  var cCass  = (lenCass/1000)    * TTB.cass_m;
+  var cRound = (lenRound/1000)   * TTB.round_m;
+  var cDraw  = (lenDraw/1000)    * TTB.draw_m;
+  var cSide  = 2*(lenSide/1000)  * TTB.side_m;
+  var cAl    = cCass + cRound + cDraw + cSide;
+
+  // Parts (fixed quantities per unit)
+  var cParts = TTB.corner + TTB.spring + TTB.cushion + TTB.endcap +
+               TTB.locking + TTB.ropeclip + TTB.metal + TTB.handle +
+               TTB.pvctube + TTB.pvcbar + TTB.accsset;
+
+  // Tape (same rate as honeycomb, applied to height)
+  var cTape = (h/1000) * R.tape_m;
+
+  var totalMat  = cAl + cParts + cTape;
+  var laborCost = laborRate / wpd;
+  var totalCost = totalMat + laborCost + delivery;
+
+  var sqft     = (w/304.8) * (h/304.8);
+  var billSqft = Math.max(sqft, minSqft);
+  var sellPrice= billSqft * sellRate;
+  var profit   = sellPrice - totalCost;
+  var margin   = (profit / sellPrice) * 100;
+
+  var fmt = function(v){ return '₱'+v.toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+  var mc  = margin >= 70 ? '#27ae60' : margin >= 50 ? '#e67e22' : '#c0392b';
+  var verdict = margin >= 70
+    ? {cls:'good', msg:'✅ Excellent margin at '+margin.toFixed(1)+'%!'}
+    : margin >= 50
+    ? {cls:'warn', msg:'⚠️ Acceptable at '+margin.toFixed(1)+'%. Watch costs.'}
+    : {cls:'bad',  msg:'🛑 Low margin at '+margin.toFixed(1)+'%. Review pricing.'};
+
+  document.getElementById('ttb_results').innerHTML = `
+    <div class="result-card">
+      <div class="result-header">
+        <h2>↕️ Top to Bottom Screen</h2>
+        <div class="result-meta">
+          ${w}mm × ${h}mm | ${sqft.toFixed(2)} sqft (billed: ${billSqft.toFixed(2)}) | ₱${sellRate}/sqft<br>
+          Cuttings: Cassette ${lenCass}mm · Round ${lenRound}mm · Draw bar ${lenDraw}mm · Side rail ×2 ${lenSide}mm<br>
+          Mesh H: ${meshH}mm · Mesh W: ${meshW}mm
+        </div>
+      </div>
+      <div class="summary-grid">
+        <div class="summary-cell"><div class="summary-label">Selling Price</div><div class="summary-value">${fmt(sellPrice)}</div></div>
+        <div class="summary-cell"><div class="summary-label">Total Cost</div><div class="summary-value amber">${fmt(totalCost)}</div></div>
+        <div class="summary-cell"><div class="summary-label">Gross Profit</div><div class="summary-value ${profit>=0?'green':'red'}">${fmt(profit)}</div></div>
+        <div class="summary-cell"><div class="summary-label">Gross Margin</div><div class="summary-value" style="color:${mc}">${margin.toFixed(1)}%</div></div>
+      </div>
+      <div class="margin-bar-wrap">
+        <div class="margin-bar-label"><span>Cost: ${fmt(totalCost)} (${(100-margin).toFixed(1)}%)</span><span>Profit: ${fmt(profit)} (${margin.toFixed(1)}%)</span></div>
+        <div class="margin-bar-bg"><div class="margin-bar-fill" style="width:${Math.max(0,Math.min(100,margin))}%;background:${mc}"></div></div>
+      </div>
+      <div class="bom-section">
+        <div class="bom-title">Bill of Materials & Cost Breakdown</div>
+        <table>
+          <thead><tr><th>Component</th><th>Detail</th><th class="r">Cost (₱)</th><th class="r">% of total</th></tr></thead>
+          <tbody>
+            <tr><td>YO88A Cassette (×1)</td><td>${lenCass}mm = ${(lenCass/1000).toFixed(3)}m × ₱${TTB.cass_m.toFixed(2)}/m</td><td class="r">${fmt(cCass)}</td><td class="r">${((cCass/totalCost)*100).toFixed(1)}%</td></tr>
+            <tr><td>YO57 Round tube + mesh (×1)</td><td>${lenRound}mm = ${(lenRound/1000).toFixed(3)}m × ₱${TTB.round_m.toFixed(2)}/m</td><td class="r">${fmt(cRound)}</td><td class="r">${((cRound/totalCost)*100).toFixed(1)}%</td></tr>
+            <tr><td>YO33A Drawing bar (×1)</td><td>${lenDraw}mm = ${(lenDraw/1000).toFixed(3)}m × ₱${TTB.draw_m.toFixed(2)}/m</td><td class="r">${fmt(cDraw)}</td><td class="r">${((cDraw/totalCost)*100).toFixed(1)}%</td></tr>
+            <tr><td>YO70 Side rail (×2)</td><td>${lenSide}mm × 2 = ${(2*lenSide/1000).toFixed(3)}m × ₱${TTB.side_m.toFixed(2)}/m</td><td class="r">${fmt(cSide)}</td><td class="r">${((cSide/totalCost)*100).toFixed(1)}%</td></tr>
+            <tr class="total-row"><td colspan="2">Aluminum subtotal</td><td class="r">${fmt(cAl)}</td><td class="r">${((cAl/totalCost)*100).toFixed(1)}%</td></tr>
+            <tr><td>Outer frame corner (×2)</td><td>fixed per unit</td><td class="r">${fmt(TTB.corner)}</td><td class="r">${((TTB.corner/totalCost)*100).toFixed(1)}%</td></tr>
+            <tr><td>Spring (×1)</td><td>fixed per unit</td><td class="r">${fmt(TTB.spring)}</td><td class="r">${((TTB.spring/totalCost)*100).toFixed(1)}%</td></tr>
+            <tr><td>Cushion (×1)</td><td>fixed per unit</td><td class="r">${fmt(TTB.cushion)}</td><td class="r">${((TTB.cushion/totalCost)*100).toFixed(1)}%</td></tr>
+            <tr><td>End cap (×2)</td><td>fixed per unit</td><td class="r">${fmt(TTB.endcap)}</td><td class="r">${((TTB.endcap/totalCost)*100).toFixed(1)}%</td></tr>
+            <tr><td>Side rail bottom locking (×2)</td><td>fixed per unit</td><td class="r">${fmt(TTB.locking)}</td><td class="r">${((TTB.locking/totalCost)*100).toFixed(1)}%</td></tr>
+            <tr><td>Rope clip (×1) + Metal pieces (×3)</td><td>fixed per unit</td><td class="r">${fmt(TTB.ropeclip+TTB.metal)}</td><td class="r">${(((TTB.ropeclip+TTB.metal)/totalCost)*100).toFixed(1)}%</td></tr>
+            <tr><td>Handle (×2) + PVC Tube (×1) + PVC Bar (×1)</td><td>fixed per unit</td><td class="r">${fmt(TTB.handle+TTB.pvctube+TTB.pvcbar)}</td><td class="r">${(((TTB.handle+TTB.pvctube+TTB.pvcbar)/totalCost)*100).toFixed(1)}%</td></tr>
+            <tr><td>Complete Accs set (×1)</td><td>fixed per unit</td><td class="r">${fmt(TTB.accsset)}</td><td class="r">${((TTB.accsset/totalCost)*100).toFixed(1)}%</td></tr>
+            <tr class="total-row"><td colspan="2">Parts subtotal</td><td class="r">${fmt(cParts)}</td><td class="r">${((cParts/totalCost)*100).toFixed(1)}%</td></tr>
+            <tr><td>Double sided tape</td><td>${(h/1000).toFixed(3)}m × ₱${R.tape_m.toFixed(2)}/m</td><td class="r">${fmt(cTape)}</td><td class="r">${((cTape/totalCost)*100).toFixed(1)}%</td></tr>
+            <tr class="total-row"><td colspan="2"><strong>Total Materials</strong></td><td class="r"><strong>${fmt(totalMat)}</strong></td><td class="r">${((totalMat/totalCost)*100).toFixed(1)}%</td></tr>
+            <tr><td>Labor (₱${laborRate}/day ÷ ${wpd} units)</td><td>1 manpower</td><td class="r">${fmt(laborCost)}</td><td class="r">${((laborCost/totalCost)*100).toFixed(1)}%</td></tr>
+            ${delivery>0?`<tr><td>Delivery</td><td></td><td class="r">${fmt(delivery)}</td><td class="r">${((delivery/totalCost)*100).toFixed(1)}%</td></tr>`:''}
+            <tr class="total-row"><td colspan="2"><strong>TOTAL COST</strong></td><td class="r"><strong>${fmt(totalCost)}</strong></td><td class="r">100%</td></tr>
+            <tr class="profit-row"><td colspan="2">GROSS PROFIT</td><td class="r">${fmt(profit)}</td><td class="r">${margin.toFixed(1)}%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="verdict">
+        <div class="verdict-box ${verdict.cls}">${verdict.msg}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px">
+          ⚙️ Update prices anytime via Edit Material Prices panel. TTB uses RMB rate from Honeycomb settings.
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Auto-calculate on load
+calculate();
+calcSec();
+calcPoly();
+calcTTB();
+</script>
+
+
+</div><!-- end pane_hc -->
+
+<!-- SECURITY SCREEN PANE -->
+<div id="pane_sec" class="tab-pane-main" style="display:none">
+<div class="layout">
+
+  <!-- SECURITY SIDEBAR -->
+  <div class="sidebar">
+    <div class="card">
+      <div class="card-title">🔒 Security Screen Calculator</div>
+      <div class="card-sub">Enter dimensions to compute profit</div>
+
+      <div class="field">
+        <label>Mode</label>
+        <select id="sec_mode" onchange="calcSec()">
+          <option value="oneway">One Way</option>
+          <option value="twoway">Two Way</option>
+        </select>
+      </div>
+
+      <div class="section-label">Window Dimensions</div>
+      <div class="grid2">
+        <div class="field"><label>Width (mm)</label><input type="number" id="sec_w" value="1000" oninput="calcSec()"></div>
+        <div class="field"><label>Height (mm)</label><input type="number" id="sec_h" value="2000" oninput="calcSec()"></div>
+      </div>
+
+      <div class="section-label">Labor & Other Costs</div>
+      <div class="field"><label>Manpower daily rate (₱)</label><input type="number" id="sec_labor" value="700" oninput="calcSec()"></div>
+      <div class="field"><label>Units installed per day</label><input type="number" id="sec_wpd" value="2" oninput="calcSec()"></div>
+      <div class="field"><label>Delivery / transport (₱)</label><input type="number" id="sec_delivery" value="0" oninput="calcSec()"></div>
+
+      <div class="section-label">Selling Price</div>
+      <div class="field"><label>Rate per sqft (₱) <span style="color:var(--accent);font-weight:700">(default ₱850)</span></label><input type="number" id="sec_rate" value="850" oninput="calcSec()"></div>
+      <div class="field"><label>Opening charge Two Way (₱)</label><input type="number" id="sec_opening" value="3000" oninput="calcSec()"></div>
+      <div class="field"><label>Minimum sqft</label><input type="number" id="sec_minsqft" value="20" oninput="calcSec()"></div>
+
+      <div class="section-label">USD Exchange Rate</div>
+      <div class="field"><label>USD → PHP rate</label><input type="number" id="sec_usdrate" value="60" step="0.1" oninput="calcSec()"></div>
+
+    </div>
+  </div>
+
+  <!-- SECURITY RESULTS -->
+  <div id="sec_results">
+    <div class="placeholder"><div class="placeholder-icon">🔒</div><div>Security Screen profit will appear here</div></div>
+  </div>
+
+</div>
+</div><!-- end pane_sec -->
+
+<!-- POLYCARBONATE PANE -->
+<div id="pane_poly" class="tab-pane-main" style="display:none">
+<div class="layout">
+
+  <div class="sidebar">
+    <div class="card">
+      <div class="card-title">🚪 Polycarbonate Door Calculator</div>
+      <div class="card-sub">Enter dimensions to compute profit</div>
+
+      <div class="field">
+        <label>Mode</label>
+        <select id="poly_mode" onchange="calcPoly()">
+          <option value="oneway">One Way</option>
+          <option value="twoway">Two Way</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Board Type</label>
+        <select id="poly_board" onchange="calcPoly()">
+          <option value="transparent">Transparent ($1.00/m)</option>
+          <option value="frosted">Frosted ($1.05/m)</option>
+        </select>
+      </div>
+
+      <div class="section-label">Door Dimensions</div>
+      <div class="grid2">
+        <div class="field"><label>Width (mm)</label><input type="number" id="poly_w" value="1500" oninput="calcPoly()"></div>
+        <div class="field"><label>Height (mm)</label><input type="number" id="poly_h" value="2100" oninput="calcPoly()"></div>
+      </div>
+
+      <div class="section-label">Labor</div>
+      <div class="field"><label>Manpower daily rate (₱)</label><input type="number" id="poly_labor" value="700" oninput="calcPoly()"></div>
+      <div style="font-size:11px;color:var(--muted);background:var(--row-alt);border-radius:6px;padding:8px;margin-bottom:8px">
+        📐 Auto labor: <strong>2 units/day</strong> if W≤2000mm AND H≤2000mm<br>
+        <strong>1 unit/day</strong> if W>2000mm OR H>2000mm
+      </div>
+      <div class="field"><label>Delivery / transport (₱)</label><input type="number" id="poly_delivery" value="0" oninput="calcPoly()"></div>
+
+      <div class="section-label">Selling Price</div>
+      <div class="field"><label>Rate per sqft (₱)</label><input type="number" id="poly_rate" value="850" oninput="calcPoly()"></div>
+      <div class="field"><label>Opening charge — One Way (₱)</label><input type="number" id="poly_open1" value="1200" oninput="calcPoly()"></div>
+      <div class="field"><label>Opening charge — Two Way (₱)</label><input type="number" id="poly_open2" value="4200" oninput="calcPoly()"></div>
+      <div class="field"><label>Minimum sqft</label><input type="number" id="poly_minsqft" value="20" oninput="calcPoly()"></div>
+
+      <div class="section-label">USD Exchange Rate</div>
+      <div class="field"><label>USD → PHP rate</label><input type="number" id="poly_usd" value="60" step="0.1" oninput="calcPoly()"></div>
+    </div>
+  </div>
+
+  <div id="poly_results">
+    <div class="placeholder"><div class="placeholder-icon">🚪</div><div>Polycarbonate Door profit will appear here</div></div>
+  </div>
+
+</div>
+</div><!-- end pane_poly -->
+
+<!-- TOP TO BOTTOM PANE -->
+<div id="pane_ttb" class="tab-pane-main" style="display:none">
+<div class="layout">
+
+  <div class="sidebar">
+    <div class="card">
+      <div class="card-title">↕️ Top to Bottom Screen</div>
+      <div class="card-sub">Enter dimensions to compute profit</div>
+
+      <div class="section-label">Window Dimensions</div>
+      <div class="grid2">
+        <div class="field"><label>Width (mm)</label><input type="number" id="ttb_w" value="1190" oninput="calcTTB()"></div>
+        <div class="field"><label>Height (mm)</label><input type="number" id="ttb_h" value="1195" oninput="calcTTB()"></div>
+      </div>
+
+      <div class="section-label">Cutting Deductions (mm)</div>
+      <div class="grid2">
+        <div class="field"><label>Cassette = W −</label><input type="number" id="ttb_ded_cass" value="16" oninput="calcTTB()"></div>
+        <div class="field"><label>Round tube = W −</label><input type="number" id="ttb_ded_round" value="14" oninput="calcTTB()"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Drawing bar = W −</label><input type="number" id="ttb_ded_draw" value="15" oninput="calcTTB()"></div>
+        <div class="field"><label>Side rail = H −</label><input type="number" id="ttb_ded_side" value="48" oninput="calcTTB()"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Mesh H = H +</label><input type="number" id="ttb_mesh_add" value="50" oninput="calcTTB()"></div>
+        <div class="field"><label>Mesh W = W −</label><input type="number" id="ttb_mesh_ded" value="14" oninput="calcTTB()"></div>
+      </div>
+
+      <div class="section-label">Labor & Other Costs</div>
+      <div class="field"><label>Manpower daily rate (₱)</label><input type="number" id="ttb_labor" value="700" oninput="calcTTB()"></div>
+      <div class="field"><label>Units per day</label><input type="number" id="ttb_wpd" value="4" oninput="calcTTB()"></div>
+      <div class="field"><label>Delivery / transport (₱)</label><input type="number" id="ttb_delivery" value="0" oninput="calcTTB()"></div>
+
+      <div class="section-label">Selling Price</div>
+      <div class="field"><label>Rate per sqft (₱) <span style="color:var(--accent);font-weight:700">(default ₱250)</span></label><input type="number" id="ttb_rate" value="250" oninput="calcTTB()"></div>
+      <div class="field"><label>Minimum sqft</label><input type="number" id="ttb_minsqft" value="15" oninput="calcTTB()"></div>
+    </div>
+  </div>
+
+  <div id="ttb_results">
+    <div class="placeholder"><div class="placeholder-icon">↕️</div><div>Top to Bottom profit will appear here</div></div>
+  </div>
+
+</div>
+</div><!-- end pane_ttb -->
+
+<!-- PRICING PANEL -->
+<div class="pricing-panel" id="pricingPanel">
+  <div class="pricing-header">
+    <h3>⚙️ Edit Material Prices</h3>
+    <button class="btn-close-p" onclick="closePricing()">✕ Close</button>
+  </div>
+
+  <!-- TAB BAR inside panel -->
+  <div style="display:flex;background:#1e4d38;flex-shrink:0;overflow-x:auto">
+    <button class="p-tab active" id="ptab_hc"   onclick="switchPTab('hc')"   style="padding:9px 14px;border:none;background:rgba(255,255,255,.15);color:white;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;border-bottom:2px solid white">🪟 HC/Pleated</button>
+    <button class="p-tab"        id="ptab_sec"  onclick="switchPTab('sec')"  style="padding:9px 14px;border:none;background:none;color:rgba(255,255,255,.6);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;border-bottom:2px solid transparent">🔒 Security</button>
+    <button class="p-tab"        id="ptab_poly" onclick="switchPTab('poly')" style="padding:9px 14px;border:none;background:none;color:rgba(255,255,255,.6);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;border-bottom:2px solid transparent">🚪 Polycarb</button>
+    <button class="p-tab"        id="ptab_ttb"  onclick="switchPTab('ttb')"  style="padding:9px 14px;border:none;background:none;color:rgba(255,255,255,.6);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;border-bottom:2px solid transparent">↕️ Top-Bot</button>
+  </div>
+
+  <div class="pricing-scroll" id="pscroll">
+
+    <!-- ══ HC/PLEATED ══ -->
+    <div id="psec_hc">
+      <div class="note-box">💡 Enter RMB price + bar/roll length — PHP/meter is auto-calculated.</div>
+
+      <div class="rmb-row">
+        <label>RMB → PHP Rate</label>
+        <input type="number" id="p_rmb" value="8.80" step="0.01" oninput="updatePreviews()">
+      </div>
+
+      <div class="pricing-group">
+        <div class="pricing-group-title">Aluminum Profiles (5.8m per bar)</div>
+        <div class="pr-table-head">
+          <span>Profile</span><span>RMB/bar</span><span>Length(m)</span><span>PHP/m</span>
+        </div>
+        <div class="pr-item">
+          <span>X023 Outer/Side/Bottom frame</span>
+          <input type="number" id="p_x023_rmb" value="85.42" step="0.01" oninput="updatePreviews()">
+          <input type="number" id="p_x023_len" value="5.8"   step="0.1"  oninput="updatePreviews()">
+          <span class="pr-val" id="prev_x023">₱129.60</span>
+        </div>
+        <div class="pr-item">
+          <span>X022 Top profile</span>
+          <input type="number" id="p_x022_rmb" value="112.81" step="0.01" oninput="updatePreviews()">
+          <input type="number" id="p_x022_len" value="5.8"    step="0.1"  oninput="updatePreviews()">
+          <span class="pr-val" id="prev_x022">₱171.16</span>
+        </div>
+        <div class="pr-item">
+          <span>X024 Inner frame</span>
+          <input type="number" id="p_x024_rmb" value="71.80"  step="0.01" oninput="updatePreviews()">
+          <input type="number" id="p_x024_len" value="5.8"    step="0.1"  oninput="updatePreviews()">
+          <span class="pr-val" id="prev_x024">₱108.94</span>
+        </div>
+        <div class="pr-item">
+          <span>X025 Middle profile</span>
+          <input type="number" id="p_x025_rmb" value="110.99" step="0.01" oninput="updatePreviews()">
+          <input type="number" id="p_x025_len" value="5.8"    step="0.1"  oninput="updatePreviews()">
+          <span class="pr-val" id="prev_x025">₱168.40</span>
+        </div>
+      </div>
+
+      <div class="pricing-group">
+        <div class="pricing-group-title">Fabric (per roll → PHP/sqft)</div>
+        <div class="pr-table-head"><span>Fabric</span><span>RMB/roll</span><span>Roll sqm</span><span>PHP/sqft</span></div>
+        <div class="pr-item">
+          <span>Honeycomb Full Blackout (3×19m)</span>
+          <input type="number" id="p_hc_rmb" value="883.50" step="0.01" oninput="updatePreviews()">
+          <input type="number" id="p_hc_sqm" value="57"     step="1"    oninput="updatePreviews()">
+          <span class="pr-val" id="prev_hc">₱12.67</span>
+        </div>
+        <div class="pr-item">
+          <span>Pleated mesh (3×30m)</span>
+          <input type="number" id="p_sc_rmb" value="225.00" step="0.01" oninput="updatePreviews()">
+          <input type="number" id="p_sc_sqm" value="90"     step="1"    oninput="updatePreviews()">
+          <span class="pr-val" id="prev_sc">₱2.04</span>
+        </div>
+      </div>
+
+      <div class="pricing-group">
+        <div class="pricing-group-title">Other Materials (per roll → PHP/m)</div>
+        <div class="pr-table-head"><span>Material</span><span>RMB/roll</span><span>Length(m)</span><span>PHP/m</span></div>
+        <div class="pr-item">
+          <span>PVC strip (4.5m/pc)</span>
+          <input type="number" id="p_pvc_rmb"  value="23.15" step="0.01" oninput="updatePreviews()">
+          <input type="number" id="p_pvc_len"  value="4.5"   step="0.1"  oninput="updatePreviews()">
+          <span class="pr-val" id="prev_pvc">₱45.27</span>
+        </div>
+        <div class="pr-item">
+          <span>Double sided tape (50m/roll)</span>
+          <input type="number" id="p_tape_rmb" value="40.00" step="0.01" oninput="updatePreviews()">
+          <input type="number" id="p_tape_len" value="50"    step="1"    oninput="updatePreviews()">
+          <span class="pr-val" id="prev_tape">₱7.04</span>
+        </div>
+        <div class="pr-item">
+          <span>Rope/string (1600m/roll)</span>
+          <input type="number" id="p_rope_rmb" value="300.00" step="0.01" oninput="updatePreviews()">
+          <input type="number" id="p_rope_len" value="1600"   step="1"    oninput="updatePreviews()">
+          <span class="pr-val" id="prev_rope">₱1.65</span>
+        </div>
+        <div class="pr-item">
+          <span>Accessories set (per set)</span>
+          <input type="number" id="p_accs_rmb" value="36.95" step="0.01" oninput="updatePreviews()">
+          <span style="font-size:11px;color:var(--muted);text-align:center">per set</span>
+          <span class="pr-val" id="prev_accs">₱325.16</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SECURITY ══ -->
+    <div id="psec_sec" style="display:none">
+      <div class="note-box">💡 Security Screen uses USD pricing. Set USD→PHP rate below.</div>
+      <div class="rmb-row">
+        <label>USD → PHP Rate</label>
+        <input type="number" id="p_sec_usd" value="60" step="0.5" oninput="updateSecPreviews()">
+      </div>
+      <div class="pricing-group">
+        <div class="pricing-group-title">Aluminum Profiles ($/kg × weight/m)</div>
+        <div class="pr-table-head"><span>Profile</span><span>$/kg</span><span>kg/m</span><span>PHP/m</span></div>
+        <div class="pr-item">
+          <span>WL4016 Side frame</span>
+          <input type="number" id="p_sec_pkg"    value="7.35"  step="0.01"  oninput="updateSecPreviews()">
+          <input type="number" id="p_sec4016_kg" value="0.418" step="0.001" oninput="updateSecPreviews()">
+          <span class="pr-val" id="prev_sec4016">₱221.31</span>
+        </div>
+        <div class="pr-item">
+          <span>WL3418 Pull rod</span>
+          <input type="number" id="p_sec3418_pkg" value="6.35"  step="0.01"  oninput="updateSecPreviews()">
+          <input type="number" id="p_sec3418_kg"  value="0.585" step="0.001" oninput="updateSecPreviews()">
+          <span class="pr-val" id="prev_sec3418">₱222.93</span>
+        </div>
+        <div class="pr-item">
+          <span>WL4026 Upper rail</span>
+          <input type="number" id="p_sec4026_pkg" value="5.35"  step="0.01"  oninput="updateSecPreviews()">
+          <input type="number" id="p_sec4026_kg"  value="0.786" step="0.001" oninput="updateSecPreviews()">
+          <span class="pr-val" id="prev_sec4026">₱252.31</span>
+        </div>
+        <div class="pr-item">
+          <span>WL4013 Bottom rail</span>
+          <input type="number" id="p_sec4013_pkg" value="4.35"  step="0.01"  oninput="updateSecPreviews()">
+          <input type="number" id="p_sec4013_kg"  value="0.458" step="0.001" oninput="updateSecPreviews()">
+          <span class="pr-val" id="prev_sec4013">₱119.55</span>
+        </div>
+        <div class="pr-item">
+          <span>Security mesh ($/m)</span>
+          <input type="number" id="p_sec_mesh" value="1.20" step="0.01" oninput="updateSecPreviews()">
+          <span style="color:var(--muted);font-size:11px;text-align:center">USD/m</span>
+          <span class="pr-val" id="prev_sec_mesh">₱72.00/m</span>
+        </div>
+      </div>
+
+      <div class="pricing-group">
+        <div class="pricing-group-title">Hardware Parts (USD/pc)</div>
+        <div class="pr-table-head"><span>Part</span><span>USD/pc</span><span>Qty/unit</span><span>PHP/pc</span></div>
+        <div class="pr-item"><span>Corner side frame</span>
+          <input type="number" id="p_sec_cornerSF" value="0.33" step="0.01" oninput="updateSecPreviews()">
+          <span class="pr-qty">×2</span><span class="pr-val" id="prev_sec_cornerSF">₱19.80</span></div>
+        <div class="pr-item"><span>Corner door rail</span>
+          <input type="number" id="p_sec_cornerDR" value="0.31" step="0.01" oninput="updateSecPreviews()">
+          <span class="pr-qty">×2</span><span class="pr-val" id="prev_sec_cornerDR">₱18.60</span></div>
+        <div class="pr-item"><span>Pull rod upper (L or R)</span>
+          <input type="number" id="p_sec_pullU" value="1.50" step="0.01" oninput="updateSecPreviews()">
+          <span class="pr-qty">×1</span><span class="pr-val" id="prev_sec_pullU">₱90.00</span></div>
+        <div class="pr-item"><span>Pull rod bottom (L or R)</span>
+          <input type="number" id="p_sec_pullB" value="0.11" step="0.01" oninput="updateSecPreviews()">
+          <span class="pr-qty">×1</span><span class="pr-val" id="prev_sec_pullB">₱6.60</span></div>
+        <div class="pr-item"><span>Connecting rod upper wheel</span>
+          <input type="number" id="p_sec_connRod" value="0.78" step="0.01" oninput="updateSecPreviews()">
+          <span class="pr-qty">formula</span><span class="pr-val" id="prev_sec_connRod">₱46.80/pc</span></div>
+        <div class="pr-item"><span>Bottom M rod movable</span>
+          <input type="number" id="p_sec_botMRod" value="0.04" step="0.01" oninput="updateSecPreviews()">
+          <span class="pr-qty">formula</span><span class="pr-val" id="prev_sec_botMRod">₱2.40/pc</span></div>
+        <div class="pr-item"><span>M rod fixture</span>
+          <input type="number" id="p_sec_mRodFix" value="0.04" step="0.01" oninput="updateSecPreviews()">
+          <span class="pr-qty">formula</span><span class="pr-val" id="prev_sec_mRodFix">₱2.40/pc</span></div>
+        <div class="pr-item"><span>T-bar special plug</span>
+          <input type="number" id="p_sec_tBar" value="0.03" step="0.01" oninput="updateSecPreviews()">
+          <span class="pr-qty">×2/×4</span><span class="pr-val" id="prev_sec_tBar">₱1.80/pc</span></div>
+        <div class="pr-item"><span>8cm mesh clip</span>
+          <input type="number" id="p_sec_clip8" value="0.06" step="0.01" oninput="updateSecPreviews()">
+          <span class="pr-qty">n8×2</span><span class="pr-val" id="prev_sec_clip8">₱3.60/pc</span></div>
+        <div class="pr-item"><span>6cm mesh clip</span>
+          <input type="number" id="p_sec_clip6" value="0.06" step="0.01" oninput="updateSecPreviews()">
+          <span class="pr-qty">n6×2</span><span class="pr-val" id="prev_sec_clip6">₱3.60/pc</span></div>
+        <div class="pr-item"><span>4cm mesh clip</span>
+          <input type="number" id="p_sec_clip4" value="0.05" step="0.01" oninput="updateSecPreviews()">
+          <span class="pr-qty">n4×2</span><span class="pr-val" id="prev_sec_clip4">₱3.00/pc</span></div>
+        <div class="pr-item"><span>Pin (2500pcs bag = $67.50)</span>
+          <input type="number" id="p_sec_pin" value="0.027" step="0.001" oninput="updateSecPreviews()">
+          <span class="pr-qty">formula</span><span class="pr-val" id="prev_sec_pin">₱1.62/pc</span></div>
+        <div class="pr-item"><span>Hook lock</span>
+          <input type="number" id="p_sec_hookLock" value="4.91" step="0.01" oninput="updateSecPreviews()">
+          <span class="pr-qty">×1</span><span class="pr-val" id="prev_sec_hookLock">₱294.60</span></div>
+        <div class="pr-item"><span>Mask lock (2-way only)</span>
+          <input type="number" id="p_sec_maskLock" value="3.86" step="0.01" oninput="updateSecPreviews()">
+          <span class="pr-qty">×1 (2way)</span><span class="pr-val" id="prev_sec_maskLock">₱231.60</span></div>
+        <div class="pr-item"><span>Magnetic strip (per meter)</span>
+          <input type="number" id="p_sec_magStrip" value="0.2004" step="0.0001" oninput="updateSecPreviews()">
+          <span class="pr-qty">h meters</span><span class="pr-val" id="prev_sec_magStrip">₱12.02/m</span></div>
+        <div class="pr-item"><span>Weather strip (per meter)</span>
+          <input type="number" id="p_sec_weather" value="0.0316" step="0.0001" oninput="updateSecPreviews()">
+          <span class="pr-qty">h meters</span><span class="pr-val" id="prev_sec_weather">₱1.90/m</span></div>
+        <div class="pr-item"><span>WL1019 adjuster</span>
+          <input type="number" id="p_sec_wl1019" value="3.48" step="0.01" oninput="updateSecPreviews()">
+          <span class="pr-qty">formula</span><span class="pr-val" id="prev_sec_wl1019">₱208.80/pc</span></div>
+        <div class="pr-item"><span>WL1316 adjuster (10mm)</span>
+          <input type="number" id="p_sec_wl1316" value="4.80" step="0.01" oninput="updateSecPreviews()">
+          <span class="pr-qty">formula</span><span class="pr-val" id="prev_sec_wl1316">₱288.00/pc</span></div>
+        <div class="pr-item"><span>WL0816 adjuster (5mm)</span>
+          <input type="number" id="p_sec_wl0816" value="3.48" step="0.01" oninput="updateSecPreviews()">
+          <span class="pr-qty">formula</span><span class="pr-val" id="prev_sec_wl0816">₱208.80/pc</span></div>
+        <div class="pr-item"><span>WL1417 adjuster (3mm)</span>
+          <input type="number" id="p_sec_wl1417" value="3.86" step="0.01" oninput="updateSecPreviews()">
+          <span class="pr-qty">formula</span><span class="pr-val" id="prev_sec_wl1417">₱231.60/pc</span></div>
+      </div>
+    </div>
+
+    <!-- ══ POLYCARBONATE ══ -->
+    <div id="psec_poly" style="display:none">
+      <div class="note-box">💡 Polycarbonate uses USD pricing. Set USD→PHP rate below.</div>
+      <div class="rmb-row">
+        <label>USD → PHP Rate</label>
+        <input type="number" id="p_poly_usd" value="60" step="0.5" oninput="updatePolyPreviews()">
+      </div>
+      <div class="pricing-group">
+        <div class="pricing-group-title">Aluminum Profiles ($/kg × weight/m)</div>
+        <div class="pr-table-head"><span>Profile</span><span>$/kg</span><span>kg/m</span><span>PHP/m</span></div>
+        <div class="pr-item">
+          <span>WL6320 Side frame</span>
+          <input type="number" id="p_poly_pkg"    value="4.50"  step="0.01"  oninput="updatePolyPreviews()">
+          <input type="number" id="p_poly6320_kg" value="0.523" step="0.001" oninput="updatePolyPreviews()">
+          <span class="pr-val" id="prev_poly6320">₱141.21/m</span>
+        </div>
+        <div class="pr-item">
+          <span>WL5643 Sliding rod</span>
+          <input type="number" id="p_poly5643_pkg" value="4.50"  step="0.01"  oninput="updatePolyPreviews()">
+          <input type="number" id="p_poly5643_kg"  value="0.856" step="0.001" oninput="updatePolyPreviews()">
+          <span class="pr-val" id="prev_poly5643">₱231.12/m</span>
+        </div>
+        <div class="pr-item">
+          <span>WL6455 Upper frame</span>
+          <input type="number" id="p_poly6455_pkg" value="4.50"  step="0.01"  oninput="updatePolyPreviews()">
+          <input type="number" id="p_poly6455_kg"  value="1.386" step="0.001" oninput="updatePolyPreviews()">
+          <span class="pr-val" id="prev_poly6455">₱374.22/m</span>
+        </div>
+        <div class="pr-item">
+          <span>WL6413 Bottom rail</span>
+          <input type="number" id="p_poly6413_pkg" value="4.50"  step="0.01"  oninput="updatePolyPreviews()">
+          <input type="number" id="p_poly6413_kg"  value="0.535" step="0.001" oninput="updatePolyPreviews()">
+          <span class="pr-val" id="prev_poly6413">₱144.45/m</span>
+        </div>
+      </div>
+      <div class="pricing-group">
+        <div class="pricing-group-title">PC Boards ($/m → PHP per 3m piece)</div>
+        <div class="pr-table-head"><span>Board</span><span>$/m</span><span></span><span>PHP/3m pc</span></div>
+        <div class="pr-item">
+          <span>Frosted board</span>
+          <input type="number" id="p_poly_frosted" value="1.05" step="0.01" oninput="updatePolyPreviews()">
+          <span></span>
+          <span class="pr-val" id="prev_poly_frosted">₱189.00</span>
+        </div>
+        <div class="pr-item">
+          <span>Transparent board</span>
+          <input type="number" id="p_poly_transparent" value="1.00" step="0.01" oninput="updatePolyPreviews()">
+          <span></span>
+          <span class="pr-val" id="prev_poly_transparent">₱180.00</span>
+        </div>
+      </div>
+
+      <div class="pricing-group">
+        <div class="pricing-group-title">Hardware Parts (USD — cost per piece)</div>
+        <div class="pr-table-head"><span>Part</span><span>Bag $</span><span>Pcs/bag</span><span>PHP/pc</span></div>
+        <div class="pr-item"><span>Connection cover (side+upper wheels)</span>
+          <input type="number" id="p_poly_conn_bag" value="5.10" step="0.01" oninput="updatePolyPreviews()">
+          <input type="number" id="p_poly_conn_pcs" value="100" step="1" oninput="updatePolyPreviews()">
+          <span class="pr-val" id="prev_poly_conn">₱3.06</span></div>
+        <div class="pr-item"><span>Door rail corner joint</span>
+          <input type="number" id="p_poly_door_bag" value="21.85" step="0.01" oninput="updatePolyPreviews()">
+          <input type="number" id="p_poly_door_pcs" value="50" step="1" oninput="updatePolyPreviews()">
+          <span class="pr-val" id="prev_poly_door">₱26.22</span></div>
+        <div class="pr-item"><span>Bottom cover of sliding rod</span>
+          <input type="number" id="p_poly_bot_bag" value="12.70" step="0.01" oninput="updatePolyPreviews()">
+          <input type="number" id="p_poly_bot_pcs" value="50" step="1" oninput="updatePolyPreviews()">
+          <span class="pr-val" id="prev_poly_bot">₱15.24</span></div>
+        <div class="pr-item"><span>Move wheels (stainless steel)</span>
+          <input type="number" id="p_poly_wheels_bag" value="167.50" step="0.01" oninput="updatePolyPreviews()">
+          <input type="number" id="p_poly_wheels_pcs" value="50" step="1" oninput="updatePolyPreviews()">
+          <span class="pr-val" id="prev_poly_wheels">₱201.00</span></div>
+        <div class="pr-item"><span>Upper wheel of M rod</span>
+          <input type="number" id="p_poly_upper_bag" value="105.00" step="0.01" oninput="updatePolyPreviews()">
+          <input type="number" id="p_poly_upper_pcs" value="450" step="1" oninput="updatePolyPreviews()">
+          <span class="pr-val" id="prev_poly_upper">₱14.00</span></div>
+        <div class="pr-item"><span>M-rod bottom movable accessories</span>
+          <input type="number" id="p_poly_mrod_bag" value="32.00" step="0.01" oninput="updatePolyPreviews()">
+          <input type="number" id="p_poly_mrod_pcs" value="450" step="1" oninput="updatePolyPreviews()">
+          <span class="pr-val" id="prev_poly_mrod">₱4.27</span></div>
+        <div class="pr-item"><span>3.5×10 screws</span>
+          <input type="number" id="p_poly_screw_bag" value="5.50" step="0.01" oninput="updatePolyPreviews()">
+          <input type="number" id="p_poly_screw_pcs" value="450" step="1" oninput="updatePolyPreviews()">
+          <span class="pr-val" id="prev_poly_screw">₱0.73</span></div>
+      </div>
+    </div>
+
+    <!-- ══ TOP TO BOTTOM ══ -->
+    <div id="psec_ttb" style="display:none">
+      <div class="note-box">💡 TTB uses same RMB rate as HC/Pleated tab. Update there first.</div>
+      <div style="background:var(--accent-light);border:1px solid var(--accent);border-radius:7px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:var(--accent);font-weight:600">
+        Current RMB rate: <span id="ttb_rmb_display2">8.80</span> &nbsp;(set in HC/Pleated tab)
+      </div>
+
+      <div class="pricing-group">
+        <div class="pricing-group-title">Aluminum Profiles (RMB/pc, 5.8m)</div>
+        <div class="pr-table-head"><span>Profile</span><span>RMB/pc</span><span>Length(m)</span><span>PHP/m</span></div>
+        <div class="pr-item">
+          <span>YO88A Cassette</span>
+          <input type="number" id="p_ttb_cass_rmb"  value="114.72" step="0.01" oninput="updateTTBPreviews()">
+          <input type="number" id="p_ttb_cass_len"  value="5.8"    step="0.1"  oninput="updateTTBPreviews()">
+          <span class="pr-val" id="prev_ttb_cass">₱174.06/m</span>
+        </div>
+        <div class="pr-item">
+          <span>YO57 Round tube+mesh</span>
+          <input type="number" id="p_ttb_round_rmb" value="102.84" step="0.01" oninput="updateTTBPreviews()">
+          <input type="number" id="p_ttb_round_len" value="5.8"    step="0.1"  oninput="updateTTBPreviews()">
+          <span class="pr-val" id="prev_ttb_round">₱156.03/m</span>
+        </div>
+        <div class="pr-item">
+          <span>YO33A Drawing bar</span>
+          <input type="number" id="p_ttb_draw_rmb"  value="69.85"  step="0.01" oninput="updateTTBPreviews()">
+          <input type="number" id="p_ttb_draw_len"  value="5.8"    step="0.1"  oninput="updateTTBPreviews()">
+          <span class="pr-val" id="prev_ttb_draw">₱105.98/m</span>
+        </div>
+        <div class="pr-item">
+          <span>YO70 Side rail (×2)</span>
+          <input type="number" id="p_ttb_side_rmb"  value="79.16"  step="0.01" oninput="updateTTBPreviews()">
+          <input type="number" id="p_ttb_side_len"  value="5.8"    step="0.1"  oninput="updateTTBPreviews()">
+          <span class="pr-val" id="prev_ttb_side">₱120.10/m</span>
+        </div>
+      </div>
+
+      <div class="pricing-group">
+        <div class="pricing-group-title">Hardware Parts (RMB/pc)</div>
+        <div class="pr-table-head"><span>Part</span><span>RMB/pc</span><span>Qty/unit</span><span>PHP total</span></div>
+        <div class="pr-item"><span>Outer frame corner</span>
+          <input type="number" id="p_ttb_corner"  value="0.47"  step="0.01" oninput="updateTTBPreviews()">
+          <span class="pr-qty">×2</span><span class="pr-val" id="prev_ttb_corner">₱8.27</span></div>
+        <div class="pr-item"><span>Spring</span>
+          <input type="number" id="p_ttb_spring"  value="2.47"  step="0.01" oninput="updateTTBPreviews()">
+          <span class="pr-qty">×1</span><span class="pr-val" id="prev_ttb_spring">₱21.74</span></div>
+        <div class="pr-item"><span>Cushion</span>
+          <input type="number" id="p_ttb_cushion" value="1.50"  step="0.01" oninput="updateTTBPreviews()">
+          <span class="pr-qty">×1</span><span class="pr-val" id="prev_ttb_cushion">₱13.20</span></div>
+        <div class="pr-item"><span>End cap</span>
+          <input type="number" id="p_ttb_endcap"  value="0.29"  step="0.01" oninput="updateTTBPreviews()">
+          <span class="pr-qty">×2</span><span class="pr-val" id="prev_ttb_endcap">₱5.10</span></div>
+        <div class="pr-item"><span>Side rail bottom locking</span>
+          <input type="number" id="p_ttb_locking" value="0.36"  step="0.01" oninput="updateTTBPreviews()">
+          <span class="pr-qty">×2</span><span class="pr-val" id="prev_ttb_locking">₱6.34</span></div>
+        <div class="pr-item"><span>Rope clip</span>
+          <input type="number" id="p_ttb_ropeclip" value="0.79" step="0.01" oninput="updateTTBPreviews()">
+          <span class="pr-qty">×1</span><span class="pr-val" id="prev_ttb_ropeclip">₱6.95</span></div>
+        <div class="pr-item"><span>Metal pieces</span>
+          <input type="number" id="p_ttb_metal"   value="0.18"  step="0.01" oninput="updateTTBPreviews()">
+          <span class="pr-qty">×3</span><span class="pr-val" id="prev_ttb_metal">₱4.75</span></div>
+        <div class="pr-item"><span>Handle</span>
+          <input type="number" id="p_ttb_handle"  value="0.61"  step="0.01" oninput="updateTTBPreviews()">
+          <span class="pr-qty">×2</span><span class="pr-val" id="prev_ttb_handle">₱10.74</span></div>
+        <div class="pr-item"><span>PVC Tube Spring 55cm</span>
+          <input type="number" id="p_ttb_pvctube" value="0.69"  step="0.01" oninput="updateTTBPreviews()">
+          <span class="pr-qty">×1</span><span class="pr-val" id="prev_ttb_pvctube">₱6.07</span></div>
+        <div class="pr-item"><span>Small PVC Bar + Spring</span>
+          <input type="number" id="p_ttb_pvcbar"  value="0.25"  step="0.01" oninput="updateTTBPreviews()">
+          <span class="pr-qty">×1</span><span class="pr-val" id="prev_ttb_pvcbar">₱2.20</span></div>
+        <div class="pr-item"><span>Complete Accs set (black)</span>
+          <input type="number" id="p_ttb_accsset" value="16.20" step="0.01" oninput="updateTTBPreviews()">
+          <span class="pr-qty">×1</span><span class="pr-val" id="prev_ttb_accsset">₱142.56</span></div>
+      </div>
+    </div>
+
+  </div><!-- end pricing-scroll -->
+
+  <div class="pricing-footer">
+    <button class="btn-save-p" onclick="savePricing()">💾 Save & Recalculate</button>
+    <button class="btn-reset-p" onclick="resetPricing()">↩ Reset to Defaults</button>
+  </div>
+</div>
+
+</body>
+</html>
